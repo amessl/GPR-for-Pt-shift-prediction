@@ -1,0 +1,183 @@
+
+{
+    "H": {
+        "pauling_EN": 2.2,
+        "atomic_radius": 25,
+        "nuclear_charge": 1,
+        "ionization_potential": 13.5985,
+        "electron_affinity": 0.7542,
+        "polarizability": 4.5,
+        "vdw_radius": 120
+    },
+
+    "C": {
+        "pauling_EN": 2.55,
+        "atomic_radius": 70,
+        "nuclear_charge": 6,
+        "ionization_potential": 11.2604,
+        "electron_affinity": 1.2621,
+        "polarizability": 11.3,
+        "vdw_radius": 170
+    },
+
+    "N": {
+        "pauling_EN": 3.04,
+        "atomic_radius": 65,
+        "nuclear_charge": 7,
+        "ionization_potential": 14.5341,
+        "electron_affinity": -0.07,
+        "polarizability": 7.4,
+        "vdw_radius": 155
+    },
+
+    "O": {
+        "pauling_EN": 3.44,
+        "atomic_radius": 60,
+        "nuclear_charge": 8,
+        "ionization_potential": 13.6181,
+        "electron_affinity": 1.4611,
+        "polarizability": 5.3,
+        "vdw_radius": 152
+    },
+
+    "F": {
+        "pauling_EN": 3.98,
+        "atomic_radius": 50,
+        "nuclear_charge": 9,
+        "ionization_potential": 17.4228,
+        "electron_affinity": 3.4012,
+        "polarizability": 3.74,
+        "vdw_radius": 147
+    },
+
+    "Cl": {
+        "pauling_EN": 3.16,
+        "atomic_radius": 100,
+        "nuclear_charge": 17,
+        "ionization_potential": 12.9676,
+        "electron_affinity": 3.6127,
+        "polarizability": 14.6,
+        "vdw_radius": 175
+    },
+
+    "Br": {
+        "pauling_EN": 2.96,
+        "atomic_radius": 115,
+        "nuclear_charge": 35,
+        "ionization_potential": 11.8138,
+        "electron_affinity": 3.3636,
+        "polarizability": 21.0,
+        "vdw_radius": 185
+    },
+
+    "I": {
+        "pauling_EN": 2.66,
+        "atomic_radius": 140,
+        "nuclear_charge": 53,
+        "ionization_potential": 10.4513,
+        "electron_affinity": 3.0590,
+        "polarizability": 32.9,
+        "vdw_radius": 198
+    },
+
+    "P": {
+        "pauling_EN": 2.19,
+        "atomic_radius": 100,
+        "nuclear_charge": 15,
+        "ionization_potential": 10.4867,
+        "electron_affinity": 0.7466,
+        "polarizability": 25.0,
+        "vdw_radius": 180
+    },
+
+    "As": {
+        "pauling_EN": 2.18,
+        "atomic_radius": 115,
+        "nuclear_charge": 33,
+        "ionization_potential": 9.7886,
+        "electron_affinity": 0.8048,
+        "polarizability": 30.0,
+        "vdw_radius": 185
+    },
+
+    "Sb": {
+        "pauling_EN": 2.05,
+        "atomic_radius": 145,
+        "nuclear_charge": 51,
+        "ionization_potential": 8.6084,
+        "electron_affinity": 1.0474,
+        "polarizability": 43.0,
+        "vdw_radius": 206
+    },
+
+    "Se": {
+        "pauling_EN": 2.55,
+        "atomic_radius": 115,
+        "nuclear_charge": 34,
+        "ionization_potential": 9.7524,
+        "electron_affinity": 2.0206,
+        "polarizability": 28.9,
+        "vdw_radius": 190
+    },
+
+    "S": {
+        "pauling_EN": 2.58,
+        "atomic_radius": 100,
+        "nuclear_charge": 16,
+        "ionization_potential": 10.3600,
+        "electron_affinity": 2.0771,
+        "polarizability": 19.4,
+        "vdw_radius": 180
+    },
+
+    "Te": {
+        "pauling_EN": 2.1,
+        "atomic_radius": 140,
+        "nuclear_charge": 52,
+        "ionization_potential": 9.0096,
+        "electron_affinity": 1.9709,
+        "polarizability": 38.0,
+        "vdw_radius": 206
+    },
+
+    "Si": {
+        "pauling_EN": 1.9,
+        "atomic_radius": 110,
+        "nuclear_charge": 14,
+        "ionization_potential": 8.1517,
+        "electron_affinity": 1.3895,
+        "polarizability": 37.3,
+        "vdw_radius": 210
+    },
+
+    "Pt": {
+        "pauling_EN": 2.28,
+        "atomic_radius": 135,
+        "nuclear_charge": 78,
+        "ionization_potential": 8.9587,
+        "electron_affinity": 2.1251,
+        "polarizability": 48,
+        "vdw_radius": 175
+    },
+
+    "Sn": {
+        "pauling_EN": 1.96,
+        "atomic_radius": 145,
+        "nuclear_charge": 50,
+        "ionization_potential": 7.339,
+        "electron_affinity": 1.1121,
+        "polarizability": 53.0,
+        "vdw_radius": 217
+    },
+
+    "Ge": {
+        "pauling_EN": 2.01,
+        "atomic_radius": 125,
+        "nuclear_charge": 32,
+        "ionization_potential": 7.8994,
+        "electron_affinity": 1.2327,
+        "polarizability": 40.0,
+        "vdw_radius": 211
+    }
+}
+
