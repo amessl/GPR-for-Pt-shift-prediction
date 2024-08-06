@@ -7,9 +7,8 @@ import os
 import statistics
 
 
-
-class AtomPropDescriptors:
-    def __init__(self, descriptor_params, central_atom, xyz_path, xyz_base=None, smiles_path=None):
+class atom_props_dist:
+    def __init__(self, central_atom, xyz_path, xyz_base=None, smiles_path=None):
         """
         Initialize class for generating atomic property descriptors ('structure independent features' and 'APE-RF').
 
@@ -17,8 +16,6 @@ class AtomPropDescriptors:
         :param xyz_path: path to the xyz-file
         :param smiles_path: path to the smiles-file
         """
-
-        self.descriptor_params = descriptor_params
         self.central_atom = central_atom
         self.xyz_path = xyz_path
         self.xyz_base = xyz_base
@@ -305,53 +302,3 @@ class AtomPropDescriptors:
         # TODO: Refactor to avoid cascading conditional
 
         return prop_list, mean_prop, valency
-
-    def get_APE_RF(self, mode='all', save=False):
-
-        """
-        Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
-        of electronegativity, atomic radius and nuclear charge. Molecular charge is included by substracting
-        it from the nuclear charge of the central atom.
-        ape_rf_params = [mol_charge, cutoff, dim]
-        :param mol_charge: total charge of the molecule
-        :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms ('all')
-        :param cutoff: Maximum distance from the central atom in Angstrom.
-        :param dim: number of values sampled from the APE-RF (dimension of the resulting feature vector)
-
-        :return:
-        1D-array of APE-RF function values
-        """
-
-        EN_list = self.get_atomic_properties(target='pauling_EN', mode=mode)[0]
-        atomic_radii_list = self.get_atomic_properties(target='atomic_radius', mode=mode)[0]
-        charge_list = self.get_atomic_properties(target='nuclear_charge', mode=mode)[0]
-        central_atom_distances = self.get_adjacent_atoms_xyz()[3]
-        adjacent_atom_coord_list = self.get_adjacent_atoms_xyz()[6]
-
-        central_atom_coord = self.get_adjacent_atoms_xyz()[5]
-        central_atom_charge = self.get_central_atom_props(target='nuclear_charge')
-        central_atom_EN = self.get_central_atom_props(target='pauling_EN')
-        central_atom_radius = self.get_central_atom_props(target='atomic_radius')
-
-        relative_position_vector_list = []
-
-        for coord in adjacent_atom_coord_list:
-            relative_position = central_atom_coord - coord
-            relative_position_vector_list.append(relative_position)
-
-        x = np.linspace(0.0, self.descriptor_params[1], num=self.descriptor_params[2])
-
-        Pt_gaussian = (central_atom_charge - self.descriptor_params[0]) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
-
-        for i in range(0, len(EN_list)):
-            radial = charge_list[i] * (
-                np.exp(-(EN_list[i] * (x - central_atom_distances[i]) ** 2) / (2 * atomic_radii_list[i] / 100)))
-
-            Pt_gaussian += radial
-
-            i += 1
-
-        if save:
-            np.save(f"{self.descriptor_path}ape_rf_{self.descriptor_params}.npy", Pt_gaussian)
-
-        return Pt_gaussian
