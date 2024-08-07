@@ -7,53 +7,120 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF
 from sklearn.linear_model import Ridge
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.model_selection import train_test_split, cross_val_score, KFold, ShuffleSplit, RandomizedSearchCV, learning_curve
+from sklearn.model_selection import train_test_split, cross_val_score, KFold, \
+    ShuffleSplit, RandomizedSearchCV, learning_curve
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import Normalizer
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
 class GPR_NMR:
-    def __init__(self, descriptor_type, descriptor_params, regressor_type, normalize):
+    def __init__(self, mode, descriptor_path, descriptor_type, descriptor_params, regressor_type, normalize):
+
+        """
+               Initialize class for using descriptors as input for kernel regression (GPR and KRR)
+               with cross-validated errors, hyperparameter tuning and visualization of learning curves
+
+               :param mode: either 'read' for directly using pre-generated descriptors or
+                'write' to generate descriptors and pass them as input for the regression models
+               :param descriptor_path: path where the pre-generated descriptors are stored
+               :param descriptor_type: 'SOAP' or 'APE_RF'
+               :param descriptor_params: Parameters of the descriptors (SOAP: [rcut, nmax, lmax], APE-RF: [qmol, rcut, dim])
+               :param regressor_type: Whether to use 'GPR' or 'KRR' for regression
+               :param normalize: Whether to normalize the feature vectors before passing them as input for regression
+               """
+
+        self.mode = mode
+        self.descriptor_path = descriptor_path
         self.descriptor_type = descriptor_type
         self.descriptor_params = descriptor_params
         self.regressor_type = regressor_type
         self.normalize = normalize
 
 
-
+# TODO: finish read_descriptors with correct path and refactor predict function
     def read_descriptors(self):
 
         dataset = []
 
-        if self.descriptor_type == 'ape_rf':
+        if self.descriptor_type == 'APE_RF':
 
-    def predict(self, mode, regressor, kernel_degree, target_path, target_name, alpha, normalization,
+            APE_RF_path = os.path.join(self.descriptor_path,
+                                           f'qmol{self.descriptor_params[0]}_rcut{self.descriptor_params[1]}_dim{self.descriptor_params[2]}/')
+
+            APE_RF_filenames = sorted(os.listdir(APE_RF_path), key=lambda x: int(x.split('.')[0]))
+
+            file_count = 0
+
+            for filename in APE_RF_filenames:
+                try:
+                    file = os.path.join(APE_RF_path, filename)
+                    APE_RF_array = np.loadtxt(file)
+                    dataset.append(APE_RF_array)
+
+                    file_count += 1
+
+                except os.path.getsize(file) == 0:
+                    raise Warning(f'File No. {file_count} is empty.')
+
+                    pass
+
+            print(
+                f'SOAP files read: {len(APE_RF_filenames)}')
+
+        elif self.descriptor_type == 'SOAP':
+
+            SOAP_path = os.path.join(self.descriptor_path,
+                                          f'r{self.descriptor_params[0]}_n{self.descriptor_params[1]}_l{self.descriptor_params[2]}/')
+
+
+            SOAP_filenames = sorted(os.listdir(SOAP_path), key=lambda x: int(x.split('.')[0]))
+            SOAP_memory = 0
+            file_count = 0
+
+            for SOAP_filename in SOAP_filenames:
+                try:
+                    SOAP_file = os.path.join(SOAP_path, SOAP_filename)
+                    SOAP_array = np.load(SOAP_file)
+                    dataset.append(SOAP_array)
+                    SOAP_memory += os.path.getsize(SOAP_file)
+
+                    file_count += 1
+
+                except os.path.getsize(SOAP_file) == 0:
+                    raise Warning(f'File No. {file_count} is empty.')
+
+                    pass
+
+            print(
+                f'SOAP files read: {len(SOAP_filenames)} \nAverage size: {round((SOAP_memory / file_count) / 1024, 3)} kB')
+
+            return dataset
+
+
+    def predict(self, kernel_degree, target_path, target_name, alpha,
                 lc=None, correlation_plot=None, hypers=None, grid_search=None):
 
-        if mode == 'read':
+        if self.mode == 'read':
             X_data = self.read_descriptors()
-        elif mode == 'write':
+        elif self.mode == 'write':
             X_data = self.generate_descriptors()
         else:
             raise ValueError('Mode has to be specified as "read" or "write".')
 
         target_data = pd.read_csv(f'{target_path}.csv')[str(target_name)]
 
-        if normalization:
-            X_data = Normalizer(norm='l2').fit_transform(X_data)
-
         randomSeed = 42
         train_X, test_X, train_target, test_target = train_test_split(X_data, target_data, random_state=randomSeed, test_size=0.25, shuffle=True)
 
-        if regressor == 'GPR':
+        if self.regressor_type == 'GPR':
             if kernel_degree == 1:
                 estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed, alpha=float(alpha), optimizer=None)
             elif kernel_degree > 1:
                 estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree)), random_state=randomSeed, alpha=float(alpha), optimizer=None)
             else:
                 estimator = GaussianProcessRegressor(kernel=RBF(), alpha=float(alpha))
-        elif regressor == 'KRR':
+        elif self.regressor_type == 'KRR':
             if kernel_degree == 1:
                 estimator = Ridge(alpha=float(alpha))
             elif kernel_degree > 1:

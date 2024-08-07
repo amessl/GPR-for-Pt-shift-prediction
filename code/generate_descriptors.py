@@ -1,9 +1,6 @@
 
 import numpy as np
-import json
 import os
-import statistics
-from rdkit import Chem
 from rdkit.Chem import AllChem
 from ase import Atoms
 from dscribe.descriptors import SOAP
@@ -30,53 +27,59 @@ class generate_descriptors:
         :param cutoff: Maximum distance from the central atom in Angstrom.
         :param dim: number of values sampled from the APE-RF (dimension of the resulting feature vector)
 
+        Order of descriptor params: [q_mol, r_cut, dim]
+
         :return:
         1D-array of APE-RF function values
         """
 
-        apd = atom_props_dist(central_atom=self.central_atom, xyz_base=self.xyz_base, xyz_path=self.xyz_path)
+        APE_RF_dataset = []
+        xyz_filenames = sorted(os.listdir(self.xyz_path), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[0]
-        atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format)[0]
-        charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format)[0]
-        central_atom_distances = apd.get_adjacent_atoms_xyz()[3]
-        adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz()[6]
+        for xyz_filename in xyz_filenames:
+            apd = atom_props_dist(central_atom=self.central_atom, xyz_base=self.xyz_base, xyz_path=self.xyz_path)
 
-        central_atom_coord = apd.get_adjacent_atoms_xyz()[5]
-        central_atom_charge = apd.get_central_atom_props(target='nuclear_charge')
-        central_atom_EN = apd.get_central_atom_props(target='pauling_EN')
-        central_atom_radius = apd.get_central_atom_props(target='atomic_radius')
+            EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[0]
+            atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format)[0]
+            charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format)[0]
+            central_atom_distances = apd.get_adjacent_atoms_xyz()[3]
+            adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz()[6]
 
-        relative_position_vector_list = []
+            central_atom_coord = apd.get_adjacent_atoms_xyz()[5]
+            central_atom_charge = apd.get_central_atom_props(target='nuclear_charge')
+            central_atom_EN = apd.get_central_atom_props(target='pauling_EN')
+            central_atom_radius = apd.get_central_atom_props(target='atomic_radius')
 
-        for coord in adjacent_atom_coord_list:
-            relative_position = central_atom_coord - coord
-            relative_position_vector_list.append(relative_position)
+            relative_position_vector_list = []
 
-        x = np.linspace(0.0, self.descriptor_params[1], num=self.descriptor_params[2])
+            for coord in adjacent_atom_coord_list:
+                relative_position = central_atom_coord - coord
+                relative_position_vector_list.append(relative_position)
 
-        Pt_gaussian = (central_atom_charge - self.descriptor_params[0]) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
+            x = np.linspace(0.0, self.descriptor_params[1], num=self.descriptor_params[2])
 
-        for i in range(0, len(EN_list)):
-            radial = charge_list[i] * (
-                np.exp(-(EN_list[i] * (x - central_atom_distances[i]) ** 2) / (2 * atomic_radii_list[i] / 100)))
+            central_gaussian = (central_atom_charge - self.descriptor_params[0]) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
 
-            Pt_gaussian += radial
+            for i in range(0, len(EN_list)):
+                adjacent_gaussian = charge_list[i] * (
+                    np.exp(-(EN_list[i] * (x - central_atom_distances[i]) ** 2) / (2 * atomic_radii_list[i] / 100)))
 
-            i += 1
+                central_gaussian += adjacent_gaussian
 
-        APE_RF_path = os.path.join(self.descriptor_path,
-                                f'r{self.descriptor_params[0]}_n{self.descriptor_params[1]}_l{self.descriptor_params[2]}/')
+                i += 1
 
-        os.makedirs(APE_RF_path, exist_ok=True)
-        APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
+            APE_RF_dataset.append(central_gaussian.flatten())
+
+            APE_RF_path = os.path.join(self.descriptor_path,
+                                    f'qmol{self.descriptor_params[0]}_rcut{self.descriptor_params[1]}_dim{self.descriptor_params[2]}/')
+
+            os.makedirs(APE_RF_path, exist_ok=True)
+            APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
 
         if save:
-            np.save(f"{self.descriptor_path}ape_rf_{self.descriptor_params}.npy", Pt_gaussian)
+            np.save(f"{APE_RF_path}{APE_RF_file}.npy", central_gaussian)
 
-        # TODO: modify generate_APE_RF for generating each descriptor for each xyz file in directory and save them
-
-        return Pt_gaussian
+        return central_gaussian
 
     def generate_SOAPs(self, save=True):
 
@@ -145,7 +148,7 @@ class generate_descriptors:
                 SOAP_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
                 # SOAP_file_list.append(SOAP_file)
                 if save:
-                    np.savetxt(f'{SOAP_path}{SOAP_file}.txt', soap_power_spectrum)
+                    np.save(f'{SOAP_path}{SOAP_file}.npy', soap_power_spectrum)
 
             except Exception as e:
                 print(e)

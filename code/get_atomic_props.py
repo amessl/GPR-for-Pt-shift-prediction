@@ -10,10 +10,11 @@ import statistics
 class atom_props_dist:
     def __init__(self, central_atom, xyz_path, xyz_base=None, smiles_path=None):
         """
-        Initialize class for generating atomic property descriptors ('structure independent features' and 'APE-RF').
+        Initialize class for getting interatomic distances, neighbors of central atom and (mean) atomic properties
 
         :param central_atom: symbol of the central atom ('Pt')
         :param xyz_path: path to the xyz-file
+        :param xyz_base: basename of the xyz_files (e.g. for st_1.xyz: 'st_')
         :param smiles_path: path to the smiles-file
         """
         self.central_atom = central_atom
