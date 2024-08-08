@@ -36,12 +36,15 @@ class generate_descriptors:
         APE_RF_dataset = []
         xyz_filenames = sorted(os.listdir(self.xyz_path), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
+
         for xyz_filename in xyz_filenames:
-            apd = atom_props_dist(central_atom=self.central_atom, xyz_base=self.xyz_base, xyz_path=self.xyz_path)
+            apd = atom_props_dist(central_atom=self.central_atom, xyz_base=self.xyz_base,
+                                  xyz_path=os.path.join(self.xyz_path, xyz_filename))
 
             EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[0]
             atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format)[0]
             charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format)[0]
+
             central_atom_distances = apd.get_adjacent_atoms_xyz()[3]
             adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz()[6]
 
@@ -70,8 +73,10 @@ class generate_descriptors:
 
             APE_RF_dataset.append(central_gaussian.flatten())
 
+            # pattern qmol_rcut_dim
+
             APE_RF_path = os.path.join(self.descriptor_path,
-                                    f'qmol{self.descriptor_params[0]}_rcut{self.descriptor_params[1]}_dim{self.descriptor_params[2]}/')
+                                    f'{self.descriptor_params[0]}_{self.descriptor_params[1]}_{self.descriptor_params[2]}/')
 
             os.makedirs(APE_RF_path, exist_ok=True)
             APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
@@ -79,7 +84,7 @@ class generate_descriptors:
         if save:
             np.save(f"{APE_RF_path}{APE_RF_file}.npy", central_gaussian)
 
-        return central_gaussian
+        return APE_RF_dataset
 
     def generate_SOAPs(self, save=True):
 
@@ -142,11 +147,11 @@ class generate_descriptors:
                 SOAP_dataset.append(soap_power_spectrum.flatten())
 
                 SOAP_path = os.path.join(self.descriptor_path,
-                                               f'r{self.descriptor_params[0]}_n{self.descriptor_params[1]}_l{self.descriptor_params[2]}/')
+                                               f'{self.descriptor_params[0]}_{self.descriptor_params[1]}_{self.descriptor_params[2]}/')
 
                 os.makedirs(SOAP_path, exist_ok=True)
                 SOAP_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
-                # SOAP_file_list.append(SOAP_file)
+
                 if save:
                     np.save(f'{SOAP_path}{SOAP_file}.npy', soap_power_spectrum)
 

@@ -101,7 +101,7 @@ class atom_props_dist:
         xyz_neighbor_list = []
         neighbor_distance_list = []
 
-        with open(os.path.join('props', 'atomic_props.json')) as ap_data_file:
+        with open('atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         for index, symbol in enumerate(adjacent_atom_symbol_list):
@@ -167,7 +167,7 @@ class atom_props_dist:
                  'nuclear_charge', 'ionization_potential',
                  'electron_affinity', 'polarizability', 'vdw_radius']
 
-        with open(os.path.join('props', 'atomic_props.json')) as ap_data_file:
+        with open('atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         atom_symbol = self.central_atom
@@ -181,6 +181,8 @@ class atom_props_dist:
         atomic_property = ap_data[atom_symbol].get(target, None)
         if atomic_property is None:
             raise Exception(f"Property {target} not found for central atom {atom_symbol}.")
+
+        return atomic_property
 
 
     def get_atomic_properties(self, format, target, mode):
@@ -204,7 +206,7 @@ class atom_props_dist:
                  'nuclear_charge', 'ionization_potential',
                  'electron_affinity', 'polarizability', 'vdw_radius']
 
-        with open(os.path.join('props', 'atomic_props.json')) as ap_data_file:
+        with open('atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
 
 
