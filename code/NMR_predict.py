@@ -206,3 +206,5 @@ class GPR_NMR(generate_descriptors):
 # TODO: Refactor predict function
 # TODO: Include option for noise_estimation using WhiteKernel
 # TODO: add function for single predictions
+# TODO: add feature to generate SOAPs from SMILES strings
+# TODO: Don't forget README before re-submitting
