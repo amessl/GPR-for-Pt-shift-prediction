@@ -15,7 +15,7 @@ class generate_descriptors:
         self.central_atom = central_atom
         self.xyz_path = xyz_path
         self.xyz_base = xyz_base
-    def get_APE_RF(self, format, mode='all', save=True):
+    def get_APE_RF(self, format='xyz', mode='all', save=True):
 
         """
         Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
@@ -74,6 +74,7 @@ class generate_descriptors:
             APE_RF_dataset.append(central_gaussian.flatten())
 
             # pattern qmol_rcut_dim
+            # Maybe add qmol to each xyz_file and read it from there
 
             APE_RF_path = os.path.join(self.descriptor_path,
                                     f'{self.descriptor_params[0]}_{self.descriptor_params[1]}_{self.descriptor_params[2]}/')
@@ -163,3 +164,4 @@ class generate_descriptors:
         return np.array(SOAP_dataset)
 
 
+# TODO: Modify descriptor generation to enable generation of single descriptors

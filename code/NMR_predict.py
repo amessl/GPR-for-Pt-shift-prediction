@@ -92,7 +92,7 @@ class GPR_NMR(generate_descriptors):
 
             elif self.descriptor_type == 'APE_RF':
 
-                X_data = self.get_APE_RF(format='xyz')
+                X_data = self.get_APE_RF()
 
             else:
                 raise Exception('Descriptor type has to be specified. Use "SOAP" or "APE-RF"')
