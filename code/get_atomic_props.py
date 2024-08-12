@@ -1,5 +1,6 @@
 
 import numpy as np
+import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import AllChem
 import json
@@ -160,6 +161,20 @@ class atom_props_dist:
         mean_distance = statistics.mean(distances_no_zeroes)
 
         return mean_distance, distances
+
+    def get_qmol(self):
+
+        with open(self.xyz_path, 'r') as xyz_file:
+            qmol_line = xyz_file.readlines()[1]
+            qmol = qmol_line.strip()
+
+        try:
+            int_qmol = int(qmol)
+
+        except ValueError:
+            raise ValueError("Molecular charge not found in xyz-file. \n"
+                             "Value has to be included in second line of xyz-file")
+        return int_qmol
 
     def get_central_atom_props(self, target):
 

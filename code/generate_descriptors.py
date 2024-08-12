@@ -36,10 +36,15 @@ class generate_descriptors:
         APE_RF_dataset = []
         xyz_filenames = sorted(os.listdir(self.xyz_path), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
+        APE_RF_path = os.path.join(self.descriptor_path, '_'.join(str(param) for param in self.descriptor_params))
+
+        os.makedirs(APE_RF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
             apd = atom_props_dist(central_atom=self.central_atom, xyz_base=self.xyz_base,
                                   xyz_path=os.path.join(self.xyz_path, xyz_filename))
+
+            qmol = apd.get_qmol()
 
             EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[0]
             atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format)[0]
@@ -59,9 +64,9 @@ class generate_descriptors:
                 relative_position = central_atom_coord - coord
                 relative_position_vector_list.append(relative_position)
 
-            x = np.linspace(0.0, self.descriptor_params[1], num=self.descriptor_params[2])
+            x = np.linspace(0.0, self.descriptor_params[0], num=self.descriptor_params[1])
 
-            central_gaussian = (central_atom_charge - self.descriptor_params[0]) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
+            central_gaussian = (central_atom_charge - qmol) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
 
             for i in range(0, len(EN_list)):
                 adjacent_gaussian = charge_list[i] * (
@@ -72,18 +77,10 @@ class generate_descriptors:
                 i += 1
 
             APE_RF_dataset.append(central_gaussian.flatten())
+            APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.txt'
 
-            # pattern qmol_rcut_dim
-            # Maybe add qmol to each xyz_file and read it from there
-
-            APE_RF_path = os.path.join(self.descriptor_path,
-                                    f'{self.descriptor_params[0]}_{self.descriptor_params[1]}_{self.descriptor_params[2]}/')
-
-            os.makedirs(APE_RF_path, exist_ok=True)
-            APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
-
-        if save:
-            np.save(f"{APE_RF_path}{APE_RF_file}.npy", central_gaussian)
+            if save:
+                np.save(os.path.join(APE_RF_path, APE_RF_file), central_gaussian)
 
         return APE_RF_dataset
 
@@ -121,6 +118,11 @@ class generate_descriptors:
         # Setting up SOAPs with DScribe library
         SOAP_dataset = []
 
+        descriptor_folder = '_'.join([str(param) for param in self.descriptor_params])
+        SOAP_path = os.path.join(self.descriptor_path, descriptor_folder)
+
+        os.makedirs(SOAP_path, exist_ok=True)
+
         for xyz_filename in xyz_filenames:
 
             xyz_file_path = os.path.join(self.xyz_path, xyz_filename)
@@ -147,14 +149,10 @@ class generate_descriptors:
 
                 SOAP_dataset.append(soap_power_spectrum.flatten())
 
-                SOAP_path = os.path.join(self.descriptor_path,
-                                               f'{self.descriptor_params[0]}_{self.descriptor_params[1]}_{self.descriptor_params[2]}/')
-
-                os.makedirs(SOAP_path, exist_ok=True)
-                SOAP_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
+                SOAP_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.npy'
 
                 if save:
-                    np.save(f'{SOAP_path}{SOAP_file}.npy', soap_power_spectrum)
+                    np.save(os.path.join(SOAP_path, SOAP_file), soap_power_spectrum)
 
             except Exception as e:
                 print(e)

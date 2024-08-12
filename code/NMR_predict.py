@@ -47,15 +47,14 @@ class GPR_NMR(generate_descriptors):
 
         dataset = []
 
-        descriptor_path = os.path.join(self.descriptor_path,
-                                       f'{self.descriptor_params[0]}_{self.descriptor_params[1]}_{self.descriptor_params[2]}/')
-
+        descriptor_path = os.path.join(self.descriptor_path, '_'.join(str(param) for param in self.descriptor_params))
         descriptor_filenames = sorted(os.listdir(descriptor_path), key=lambda x: int(x.split('.')[0]))
 
         memory = 0
         file_count = 0
 
         for filename in descriptor_filenames:
+
             try:
                 descriptor_file = os.path.join(descriptor_path, filename)
                 descriptor_array = np.load(descriptor_file, allow_pickle=True)
@@ -72,7 +71,7 @@ class GPR_NMR(generate_descriptors):
                 pass
 
         print(
-            f'SOAP files read: {len(descriptor_filenames)} \nAverage size: {round((memory / file_count) / 1024, 3)} kB')
+            f'Descriptor files read: {len(descriptor_filenames)} \nAverage size: {round((memory / file_count) / 1024, 3)} kB')
 
         return dataset
 
