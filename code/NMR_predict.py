@@ -76,7 +76,7 @@ class GPR_NMR(generate_descriptors):
         return dataset
 
 
-    def predict(self, regressor_type, kernel_degree, target_path, target_name, normalize, alpha,
+    def GPR_predict(self, regressor_type, kernel_degree, target_path, target_name, normalize, alpha,
                 lc=None, correlation_plot=None, hypers=None, grid_search=None):
 
         if self.mode == 'read':
