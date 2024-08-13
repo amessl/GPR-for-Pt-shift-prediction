@@ -1,14 +1,12 @@
 
 import numpy as np
-import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import AllChem
 import json
-import os
 import statistics
 
 
-class atom_props_dist:
+class AtomPropsDist:
     def __init__(self, central_atom, xyz_path, xyz_base=None, smiles_path=None):
         """
         Initialize class for getting interatomic distances, neighbors of central atom and (mean) atomic properties
@@ -132,8 +130,16 @@ class atom_props_dist:
 
         mol = Chem.MolFromSmiles(self.smiles_path)
         mol = Chem.AddHs(mol)
-        AllChem.EmbedMolecule(mol)
-        AllChem.MMFFOptimizeMolecule(mol)
+
+        try:
+            AllChem.EmbedMolecule(mol)
+        except Exception as e:
+            print(e)
+
+        try:
+            AllChem.MMFFOptimizeMolecule(mol)
+        except Exception as e:
+            print(e)
 
         conformer = mol.GetConformer(0)
         positions = conformer.GetPositions()
@@ -164,6 +170,15 @@ class atom_props_dist:
 
     def get_qmol(self):
 
+        """
+        Obtain the molecular charge (qmol) from the xyz-file.
+        The qmol value ($qmol \in \mathbb{Z}$) is assumed to be
+        included in the second line of each xyz-file
+
+        :return:
+        Integer value of molecular charge (qmol)
+        """
+
         with open(self.xyz_path, 'r') as xyz_file:
             qmol_line = xyz_file.readlines()[1]
             qmol = qmol_line.strip()
@@ -177,6 +192,15 @@ class atom_props_dist:
         return int_qmol
 
     def get_central_atom_props(self, target):
+
+        """
+        Get the atomic properties from atomic_props.json only for the central
+        atom as specified when creating an instance of the AtomPropsDist class.
+
+        :param target: Name (str) of the target property to obtain for the central atom
+
+        :return: Value of the atomic property
+        """
 
         props = ['pauling_EN', 'atomic_radius',
                  'nuclear_charge', 'ionization_potential',
@@ -199,17 +223,20 @@ class atom_props_dist:
 
         return atomic_property
 
-
     def get_atomic_properties(self, format, target, mode):
 
         """
         Get atomic properties of the neighbor atoms of the central atom for a molecule.
         The atomic propeties are stored in the JSON file 'atomic_properties.json'
 
-        :param target: Atomic property of interest ('pauling_EN' for electronegativity, 'atomic_radius',
-        'nuclear_charge', 'ionization_potential', 'electron_affinity',
-        'polarizability' or 'vdw_radius' for the van-der-Waals radius)
-        :param mode: get atomic properties only of the neighbor atoms ('neighbors') or all atoms ('all')
+        :param format: Whether to use xyz- or SMILES-files to read the structure
+                       (Specify as 'xyz' or 'smiles')
+        :param target: Atomic property of interest ('pauling_EN' for electronegativity,
+                       'atomic_radius', 'nuclear_charge', 'ionization_potential',
+                       'electron_affinity','polarizability' or 'vdw_radius'
+                        for the van-der-Waals radius)
+        :param mode: get atomic properties only of the neighbor atoms ('neighbors') or
+                     all atoms ('all')
 
         :return:
         List of the atomic properties for each atom, mean value of the property
@@ -223,7 +250,6 @@ class atom_props_dist:
 
         with open('atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
-
 
         if format == 'xyz' and self.xyz_path is not None:
 
@@ -311,12 +337,9 @@ class atom_props_dist:
 
             mean_prop = statistics.mean(prop_list)
 
-
         else:
             raise ValueError(f"Target property is not supported. Supported properties: \n {props}")
 
         valency = len(prop_list)
-
-        # TODO: Refactor to avoid cascading conditional
 
         return prop_list, mean_prop, valency

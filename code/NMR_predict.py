@@ -33,17 +33,17 @@ class GPR_NMR(generate_descriptors):
        :param regressor_type: Whether to use 'GPR' or 'KRR' for regression
        """
 
-        # use mode read or write, drop normalize and include it in predict function, drop descriptor
-        # type and make the read/write function more general without having to specify descriptor type
-        # Check generation of APE-RF descriptor (directory, storing, etc.)
-        # Plotting learning curves, etc.: call predict function inside lc_function
-        # Later: write code for using descriptors in non-local mode for other properties
-
         super().__init__(descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base)
         self.mode = mode
         self.descriptor_type = descriptor_type
 
     def read_descriptors(self):
+
+        """
+        Read descriptors that were already generated from corresponding folder as specified
+        when creating an instance of this class.
+        :return:
+        """
 
         dataset = []
 

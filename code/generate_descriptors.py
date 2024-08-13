@@ -4,12 +4,28 @@ import os
 from rdkit.Chem import AllChem
 from ase import Atoms
 from dscribe.descriptors import SOAP
-from get_atomic_props import atom_props_dist
+from get_atomic_props import AtomPropsDist
 
 
 class generate_descriptors:
 
     def __init__(self, descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base):
+
+        """
+        Initialize class for generating descriptors (currently only APE_RF and SOAP are supported),
+        Descriptor parameters have to be specified either for SOAP or APE_RF individually when
+        creating an instance of this class. xyz_files are assumed to consist of some basename
+        followed by an integer number ('xyz_base_int.xyz')
+
+        :param descriptor_params: list of descriptor parameters. SOAP: [r_cut, n_max, l_max],
+               APE-RF: [r_cut, dim]. Set of descriptor parameters is unique for each descriptor type.
+        :param descriptor_path: folder where output of descriptor generation is stored. In this folder,
+               another folder is created for each setting of the descriptor parameters.
+        :param central_atom: symbol of the central atom (for Pt-NMR: 'Pt').
+        :param xyz_path: folder where all xyz-files are stored.
+        :param xyz_base: basename of the xyz-files (e.g. for st_1.xyz: 'st_').
+        """
+
         self.descriptor_params = descriptor_params
         self.descriptor_path = descriptor_path
         self.central_atom = central_atom
@@ -21,16 +37,15 @@ class generate_descriptors:
         Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
         of electronegativity, atomic radius and nuclear charge. Molecular charge is included by substracting
         it from the nuclear charge of the central atom.
-        ape_rf_params = [mol_charge, cutoff, dim]
-        :param mol_charge: total charge of the molecule
-        :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms ('all')
-        :param cutoff: Maximum distance from the central atom in Angstrom.
-        :param dim: number of values sampled from the APE-RF (dimension of the resulting feature vector)
 
-        Order of descriptor params: [q_mol, r_cut, dim]
+        :param format: Whether to read structure from SMILES-file (currently not supported) or xyz_file (default)
+        :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms (default)
+        Order of descriptor params: [r_cut, dim]
+        :param save: Whether to save the output of descriptor generation as .npy-file (default=True)
 
         :return:
-        1D-array of APE-RF function values
+        n x p-array of discretized APE_RF-values (APE_RF-vectors), where n is the number of samples (structures)
+        and p the dimensionality of each APE_RF-vector (controlled by the second APE_RF-parameter)
         """
 
         APE_RF_dataset = []
@@ -41,7 +56,7 @@ class generate_descriptors:
         os.makedirs(APE_RF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
-            apd = atom_props_dist(central_atom=self.central_atom, xyz_base=self.xyz_base,
+            apd = AtomPropsDist(central_atom=self.central_atom, xyz_base=self.xyz_base,
                                   xyz_path=os.path.join(self.xyz_path, xyz_filename))
 
             qmol = apd.get_qmol()
@@ -85,6 +100,19 @@ class generate_descriptors:
         return APE_RF_dataset
 
     def generate_SOAPs(self, save=True):
+
+        """
+        Generate the SOAP-descriptor using the DScribe-library (Comput. Phys. Comm. 247 (2020) 106949)
+        and save the output array as .npy-file. Descriptor parameters are specified when creating an
+        instance of this class. Order of SOAP-parameters: [r_cut, n_max, l_max].
+
+        :param save: Whether to save the output of descriptor generation as .npy-file (default=True)
+
+        :return:
+        n x p-array of SOAP-vectors, where n is the number of samples (structures) and p the
+        dimensionality of each SOAP-vector (dimensionality can be very high depending on
+        the settings of the SOAP-parameters).
+        """
 
         xyz_filenames = sorted(os.listdir(self.xyz_path), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
@@ -160,6 +188,3 @@ class generate_descriptors:
                 pass
 
         return np.array(SOAP_dataset)
-
-
-# TODO: Modify descriptor generation to enable generation of single descriptors
