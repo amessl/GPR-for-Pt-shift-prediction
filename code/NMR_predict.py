@@ -1,12 +1,11 @@
 
-# soap_gpr.py
 import numpy as np
 import pandas as pd
 import os
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF
-from sklearn.linear_model import Ridge
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import Ridge
+from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF, WhiteKernel
 from sklearn.model_selection import train_test_split, cross_val_score, KFold, \
     ShuffleSplit, RandomizedSearchCV, learning_curve
 from sklearn.metrics import r2_score
@@ -30,7 +29,6 @@ class GPR_NMR(generate_descriptors):
        :param central_atom: Atom symbol (str) of central atom ('Pt' for 195Pt-NMR)
        :param xyz_path: Path to directory where xyz-files are stored
        :param xyz_base: basename of the xyz_files (e.g. for st_1.xyz: 'st_')
-       :param regressor_type: Whether to use 'GPR' or 'KRR' for regression
        """
 
         super().__init__(descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base)
@@ -42,7 +40,10 @@ class GPR_NMR(generate_descriptors):
         """
         Read descriptors that were already generated from corresponding folder as specified
         when creating an instance of this class.
+
         :return:
+        n x p-array of descriptor vectors, where n is the number of samples (structures) and p the
+        dimensionality of each descriptor vector ("Design matrix")
         """
 
         dataset = []
@@ -71,13 +72,14 @@ class GPR_NMR(generate_descriptors):
                 pass
 
         print(
-            f'Descriptor files read: {len(descriptor_filenames)} \nAverage size: {round((memory / file_count) / 1024, 3)} kB')
+            f'Descriptor files read: {len(descriptor_filenames)} \nAverage size: {round((memory / file_count) / 1024, 3)} kB \n')
+        print(f'Dimensions of design matrix: {np.shape(dataset)}')
 
         return dataset
 
 
-    def GPR_predict(self, regressor_type, kernel_degree, target_path, target_name, normalize, alpha,
-                lc=None, correlation_plot=None, hypers=None, grid_search=None):
+    def GPR_predict(self, kernel_degree, target_path, target_name, normalize, noise,
+                lc=None, parity_plot=None, lml=False, noise_estim=False):
 
         if self.mode == 'read':
 
@@ -106,24 +108,40 @@ class GPR_NMR(generate_descriptors):
         target_data = pd.read_csv(f'{target_path}.csv')[str(target_name)]
 
         randomSeed = 42
-        train_X, test_X, train_target, test_target = train_test_split(X_data, target_data, random_state=randomSeed, test_size=0.25, shuffle=True)
+        train_X, test_X, \
+            train_target, test_target = train_test_split(X_data, target_data,
+                                                         random_state=randomSeed, test_size=0.25, shuffle=True)
 
-        if regressor_type == 'GPR':
-            if kernel_degree == 1:
-                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed, alpha=float(alpha), optimizer=None)
-            elif kernel_degree > 1:
-                estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree)), random_state=randomSeed, alpha=float(alpha), optimizer=None)
+
+        if kernel_degree == 1:
+
+            if noise_estim:
+                estimator = GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel(noise_level=noise),
+                                                     random_state=randomSeed,
+                                                     alpha=0.0, n_restarts_optimizer=10)
+
+                print(f'Optimized noise level: {estimator.kernel.k2.get_params(["noise_level"])}')
+
             else:
-                estimator = GaussianProcessRegressor(kernel=RBF(length_scale_bounds=(1e-12,1e3)), alpha=float(alpha))
-        elif regressor_type == 'KRR':
-            if kernel_degree == 1:
-                estimator = Ridge(alpha=float(alpha))
-            elif kernel_degree > 1:
-                estimator = KernelRidge(kernel=Exponentiation(DotProduct(), int(kernel_degree)), alpha=float(alpha))
+                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed,alpha=float(noise),
+                                                     optimizer=None)
+
+        elif kernel_degree > 1:
+
+            if noise_estim:
+                estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree) ) + WhiteKernel(noise_level=noise),
+                                                     random_state=randomSeed,
+                                                     alpha=0.0, n_restarts_optimizer=10)
+
+                print(f'Optimized noise level: {estimator.kernel.k2.get_params(["noise_level"])}')
+
             else:
-                estimator = KernelRidge(kernel='rbf', alpha=float(alpha))
+                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed,alpha=float(noise),
+                                                     optimizer=None)
+
         else:
-            raise ValueError('Regressor type has to be specified as "GPR" or "KRR".')
+            estimator = GaussianProcessRegressor(kernel=RBF(), alpha=float(noise))
+
 
         estimator.fit(train_X, train_target)
 
@@ -136,25 +154,86 @@ class GPR_NMR(generate_descriptors):
         print('MAE (4-fold CV):', np.mean(np.abs(scores_mae)), '[ppm]', np.std(np.abs(scores_mae)), '[ppm] (STDEV)')
 
         if lc:
-            self._plot_learning_curve(estimator, X_data, target_data, kernel_degree)
+            self._plot_learning_curve(estimator, X_data, target_data)
 
-        if correlation_plot:
+        if parity_plot:
             self._plot_correlation(estimator, train_X, test_X, train_target, test_target)
-
-        if hypers:
-            self._plot_hyperparameters(estimator)
-
-        if grid_search:
-            self._perform_grid_search(estimator, train_X, train_target)
 
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(np.abs(scores_rmse))
 
-    def _plot_learning_curve(self, estimator, X_data, target_data, kernel_degree, regressor):
-        train_sizes, train_scores, test_scores = learning_curve(estimator, X_data, target_data, train_sizes=np.linspace(0.25, 1.0, 5), cv=ShuffleSplit(n_splits=4, test_size=0.25, random_state=42), scoring='neg_mean_absolute_error')
+    def KRR_predict(self, kernel_degree, target_path, target_name, normalize, alpha,
+                lc=None, parity_plot=None):
+
+        if self.mode == 'read':
+
+            X_data = self.read_descriptors()
+
+        elif self.mode == 'write':
+
+            if self.descriptor_type == 'SOAP':
+
+                X_data = self.generate_SOAPs()
+
+            elif self.descriptor_type == 'APE_RF':
+
+                X_data = self.get_APE_RF()
+
+            else:
+                raise Exception('Descriptor type has to be specified. Use "SOAP" or "APE-RF"')
+
+        else:
+            raise Exception('Mode has to be specified as "read" for using pre-generated descriptors \n'
+                            'or "write" for generating new descriptors and passing them as input"')
+
+        if normalize:
+            X_data = Normalizer(norm='l2').fit_transform(X_data)
+
+        target_data = pd.read_csv(f'{target_path}.csv')[str(target_name)]
+
+        randomSeed = 42
+        train_X, test_X, \
+            train_target, test_target = train_test_split(X_data, target_data,
+                                                         random_state=randomSeed, test_size=0.25, shuffle=True)
+
+
+        if kernel_degree == 1:
+            estimator = Ridge(random_state=randomSeed, alpha=float(alpha))
+
+        elif kernel_degree > 1:
+            estimator = KernelRidge(kernel='polynomial', degree=int(kernel_degree),
+                                    alpha=float(alpha), coef0=0.0)
+
+        else:
+            estimator = KernelRidge(kernel='rbf', alpha=float(alpha))
+
+
+        estimator.fit(train_X, train_target)
+
+        cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
+
+        scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv, n_jobs=-1)
+        print('RMSE (4-fold CV):', np.mean(np.abs(scores_rmse)), '[ppm]', np.std(np.abs(scores_rmse)), '[ppm] (STDEV)')
+
+        scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1)
+        print('MAE (4-fold CV):', np.mean(np.abs(scores_mae)), '[ppm]', np.std(np.abs(scores_mae)), '[ppm] (STDEV)')
+
+        if lc:
+            self._plot_learning_curve(estimator, X_data, target_data)
+
+        if parity_plot:
+            self._plot_correlation(estimator, train_X, test_X, train_target, test_target)
+
+
+        return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(np.abs(scores_rmse))
+
+    def _plot_learning_curve(self, estimator, X_data, target_data):
+        train_sizes, train_scores, test_scores = learning_curve(estimator, X_data, target_data,
+                                                                train_sizes=np.linspace(0.25, 1.0, 5),
+                                                                cv=ShuffleSplit(n_splits=4, test_size=0.25,
+                                                                random_state=42), scoring='r2')
         plt.figure()
         plt.plot(train_sizes, -train_scores.mean(axis=1), 'o-', color='r', label='Training score')
         plt.plot(train_sizes, -test_scores.mean(axis=1), 'o-', color='g', label='Cross-validation score')
-        plt.title(f'Learning Curve ({regressor} with degree={kernel_degree})')
         plt.xlabel('Training examples')
         plt.ylabel('Score')
         plt.legend(loc='best')
@@ -168,9 +247,9 @@ class GPR_NMR(generate_descriptors):
         plt.figure()
         plt.scatter(test_target, prediction, edgecolors=(0, 0, 0))
         plt.plot([test_target.min(), test_target.max()], [test_target.min(), test_target.max()], 'k--', lw=4)
-        plt.xlabel('Measured')
-        plt.ylabel('Predicted')
-        plt.title(f'Correlation plot (R^2 = {correlation:.2f})')
+        plt.xlabel('Measured [ppm]')
+        plt.ylabel('Predicted [ppm]')
+        plt.title(f'Parity plot ($R^2$ = {correlation:.2f})')
         plt.show()
 
     def _plot_hyperparameters(self, estimator):
@@ -203,6 +282,7 @@ class GPR_NMR(generate_descriptors):
 
 
 # TODO: Refactor predict function
+    # TODO: resolve optimizer divergence maybe by scaling
 # TODO: Include option for noise_estimation using WhiteKernel
 # TODO: add function for single predictions
 # TODO: add feature to generate SOAPs from SMILES strings
