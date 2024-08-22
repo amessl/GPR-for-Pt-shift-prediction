@@ -79,7 +79,7 @@ class GPR_NMR(generate_descriptors):
 
 
     def GPR_predict(self, kernel_degree, target_path, target_name, normalize, noise,
-                lc=None, parity_plot=None, lml=False, noise_estim=False):
+                lc=None, parity_plot=None, noise_estim=False):
 
         if self.mode == 'read':
 
@@ -94,6 +94,10 @@ class GPR_NMR(generate_descriptors):
             elif self.descriptor_type == 'APE_RF':
 
                 X_data = self.get_APE_RF()
+
+            elif self.descriptor_type == 'APE_RF_sph':
+
+                X_data = self.get_APE_RF_sph(l_max=2)
 
             else:
                 raise Exception('Descriptor type has to be specified. Use "SOAP" or "APE-RF"')
@@ -136,7 +140,7 @@ class GPR_NMR(generate_descriptors):
                 print(f'Optimized noise level: {estimator.kernel.k2.get_params(["noise_level"])}')
 
             else:
-                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed,alpha=float(noise),
+                estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree)), random_state=randomSeed,alpha=float(noise),
                                                      optimizer=None)
 
         else:
@@ -157,7 +161,7 @@ class GPR_NMR(generate_descriptors):
             self._plot_learning_curve(estimator, X_data, target_data)
 
         if parity_plot:
-            self._plot_correlation(estimator, train_X, test_X, train_target, test_target)
+            self._plot_correlation(target_path, estimator, train_X, test_X, train_target, test_target, threshold=np.mean(np.abs(scores_rmse)))
 
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(np.abs(scores_rmse))
 
@@ -201,7 +205,7 @@ class GPR_NMR(generate_descriptors):
 
         elif kernel_degree > 1:
             estimator = KernelRidge(kernel='polynomial', degree=int(kernel_degree),
-                                    alpha=float(alpha), coef0=0.0)
+                                    alpha=float(alpha))
 
         else:
             estimator = KernelRidge(kernel='rbf', alpha=float(alpha))
@@ -221,7 +225,7 @@ class GPR_NMR(generate_descriptors):
             self._plot_learning_curve(estimator, X_data, target_data)
 
         if parity_plot:
-            self._plot_correlation(estimator, train_X, test_X, train_target, test_target)
+            self._plot_correlation(target_path, estimator, train_X, test_X, train_target, test_target, threshold=np.mean(np.abs(scores_rmse)))
 
 
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(np.abs(scores_rmse))
@@ -240,13 +244,37 @@ class GPR_NMR(generate_descriptors):
         plt.grid()
         plt.show()
 
-    def _plot_correlation(self, estimator, train_X, test_X, train_target, test_target):
+    def _plot_correlation(self, target_path, estimator, train_X, test_X,
+                          train_target, test_target, threshold):
         estimator.fit(train_X, train_target)
         prediction = estimator.predict(test_X)
         correlation = r2_score(test_target, prediction)
+
+        target_data = pd.read_csv(f'{target_path}.csv')
+        shifts = target_data['Experimental']
+        compound_names = target_data['Name']
+
+        residuals = [observed - pred for observed, pred in zip(test_target, prediction)]
+
+        outliers = [(observed, pred, res) for observed, pred, res in zip(test_target, prediction, residuals) if abs(res) > threshold]
+
         plt.figure()
         plt.scatter(test_target, prediction, edgecolors=(0, 0, 0))
         plt.plot([test_target.min(), test_target.max()], [test_target.min(), test_target.max()], 'k--', lw=4)
+
+        outlier_names = []
+
+        for observed, pred, res in outliers:
+            for shift, compound_name in zip(shifts, compound_names):
+                if observed == shift:
+                    outlier_names.append(compound_name)
+
+            plt.scatter(observed, pred, color='red')
+
+        print(f"Outliers ({len(outlier_names)}):\n------------")
+        for (observed, pred, res), outlier_name in zip(outliers, outlier_names):
+            print(f"Compound Name: {outlier_name}, Observed: {observed}, Predicted: {pred}, Residual: {res}")
+
         plt.xlabel('Measured [ppm]')
         plt.ylabel('Predicted [ppm]')
         plt.title(f'Parity plot ($R^2$ = {correlation:.2f})')

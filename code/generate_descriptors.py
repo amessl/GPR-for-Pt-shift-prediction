@@ -5,6 +5,7 @@ from rdkit.Chem import AllChem
 from ase import Atoms
 from dscribe.descriptors import SOAP
 from get_atomic_props import AtomPropsDist
+from scipy.special import sph_harm
 
 
 class generate_descriptors:
@@ -98,6 +99,77 @@ class generate_descriptors:
                 np.save(os.path.join(APE_RF_path, APE_RF_file), central_gaussian)
 
         return APE_RF_dataset
+
+
+    def get_APE_RF_triplet(self, l_max, format='xyz', mode='all', save=True):
+
+
+        """
+        Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
+        of electronegativity, atomic radius and nuclear charge. Molecular charge is included by substracting
+        it from the nuclear charge of the central atom.
+
+        :param format: Whether to read structure from SMILES-file (currently not supported) or xyz_file (default)
+        :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms (default)
+        Order of descriptor params: [r_cut, dim]
+        :param save: Whether to save the output of descriptor generation as .npy-file (default=True)
+
+        :return:
+        n x p-array of discretized APE_RF-values (APE_RF-vectors), where n is the number of samples (structures)
+        and p the dimensionality of each APE_RF-vector (controlled by the second APE_RF-parameter)
+        """
+
+        APE_RF_dataset = []
+        xyz_filenames = sorted(os.listdir(self.xyz_path), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
+
+        APE_RF_path = os.path.join(self.descriptor_path, '_'.join(str(param) for param in self.descriptor_params))
+
+        os.makedirs(APE_RF_path, exist_ok=True)
+
+        for xyz_filename in xyz_filenames:
+            apd = AtomPropsDist(central_atom=self.central_atom, xyz_base=self.xyz_base,
+                                  xyz_path=os.path.join(self.xyz_path, xyz_filename))
+
+            qmol = apd.get_qmol()
+
+            EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[0]
+            atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format)[0]
+            charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format)[0]
+
+            central_atom_distances = apd.get_adjacent_atoms_xyz()[3]
+            adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz()[6]
+
+            central_atom_coord = apd.get_adjacent_atoms_xyz()[5]
+            central_atom_charge = apd.get_central_atom_props(target='nuclear_charge')
+            central_atom_EN = apd.get_central_atom_props(target='pauling_EN')
+            central_atom_radius = apd.get_central_atom_props(target='atomic_radius')
+
+            relative_position_vector_list = []
+
+            for coord in adjacent_atom_coord_list:
+                relative_position = central_atom_coord - coord
+                relative_position_vector_list.append(relative_position)
+
+            x = np.linspace(0.0, self.descriptor_params[0], num=self.descriptor_params[1])
+
+            central_gaussian = (central_atom_charge - qmol) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
+
+            for i in range(0, len(EN_list)):
+                adjacent_gaussian = charge_list[i] * (
+                    np.exp(-(EN_list[i] * (x - central_atom_distances[i]) ** 2) / (2 * atomic_radii_list[i] / 100)))
+
+                central_gaussian += adjacent_gaussian
+
+                i += 1
+
+            APE_RF_dataset.append(central_gaussian.flatten())
+            APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.txt'
+
+            if save:
+                np.save(os.path.join(APE_RF_path, APE_RF_file), central_gaussian)
+
+        return APE_RF_dataset
+
 
     def generate_SOAPs(self, save=True):
 
