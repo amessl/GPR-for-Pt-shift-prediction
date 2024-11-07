@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import os
@@ -35,7 +34,7 @@ class GPR_NMR(generate_descriptors):
         self.mode = mode
         self.descriptor_type = descriptor_type
 
-    def read_descriptors(self):
+    def read_descriptors(self, path_index):
 
         """
         Read descriptors that were already generated from corresponding folder as specified
@@ -48,7 +47,7 @@ class GPR_NMR(generate_descriptors):
 
         dataset = []
 
-        descriptor_path = os.path.join(self.descriptor_path, '_'.join(str(param) for param in self.descriptor_params))
+        descriptor_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(param) for param in self.descriptor_params))
         descriptor_filenames = sorted(os.listdir(descriptor_path), key=lambda x: int(x.split('.')[0]))
 
         memory = 0
@@ -79,25 +78,36 @@ class GPR_NMR(generate_descriptors):
 
 
     def GPR_predict(self, kernel_degree, target_path, target_name, normalize, noise,
-                lc=None, parity_plot=None, noise_estim=False):
+                partitioned=False, lc=None, parity_plot=None, noise_estim=False):
 
         if self.mode == 'read':
 
-            X_data = self.read_descriptors()
+            X_data = []
+
+            for path_index in range(0, len(self.descriptor_path)):
+                X_data.append(self.read_descriptors(path_index))
+
+            X_data = X_data[0]  # only training data
 
         elif self.mode == 'write':
 
             if self.descriptor_type == 'SOAP':
 
-                X_data = self.generate_SOAPs()
+                if partitioned:
+                    X_data = self.generate_SOAPs_partitioned()[0]
+                else:
+                    X_data = self.generate_SOAPs()
 
-            elif self.descriptor_type == 'APE_RF':
+            elif self.descriptor_type == 'APE-RF':
 
-                X_data = self.get_APE_RF()
+                if partitioned:
+                    X_data = self.get_APE_RF_partitioned()[0]
+                else:
+                    X_data = self.get_APE_RF(smooth_cutoff=False)
 
-            elif self.descriptor_type == 'APE_RF_sph':
+            elif self.descriptor_type == 'SIF':
 
-                X_data = self.get_APE_RF_sph(l_max=2)
+                X_data = self.get_SIF()
 
             else:
                 raise Exception('Descriptor type has to be specified. Use "SOAP" or "APE-RF"')
@@ -109,13 +119,23 @@ class GPR_NMR(generate_descriptors):
         if normalize:
             X_data = Normalizer(norm='l2').fit_transform(X_data)
 
-        target_data = pd.read_csv(f'{target_path}.csv')[str(target_name)]
+        if partitioned:
+
+            target_training_data = pd.read_csv(f'{target_path[0]}')
+            target_test_data = pd.read_csv(f'{target_path[1]}')
+
+            sorted_train = target_training_data.sort_values(by='Index')
+            sorted_test = target_test_data.sort_values(by='Index')
+
+            target_data = sorted_train[str(target_name)]
+
+        else:
+            indexed_target_data = pd.read_csv(f'{target_path[0]}')
+            sorted_train = indexed_target_data.sort_values(by='Index')
+
+            target_data = sorted_train[str(target_name)]
 
         randomSeed = 42
-        train_X, test_X, \
-            train_target, test_target = train_test_split(X_data, target_data,
-                                                         random_state=randomSeed, test_size=0.25, shuffle=True)
-
 
         if kernel_degree == 1:
 
@@ -127,13 +147,13 @@ class GPR_NMR(generate_descriptors):
                 print(f'Optimized noise level: {estimator.kernel.k2.get_params(["noise_level"])}')
 
             else:
-                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed,alpha=float(noise),
+                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed, alpha=float(noise),
                                                      optimizer=None)
 
         elif kernel_degree > 1:
 
             if noise_estim:
-                estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree) ) + WhiteKernel(noise_level=noise),
+                estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise),
                                                      random_state=randomSeed,
                                                      alpha=0.0, n_restarts_optimizer=10)
 
@@ -146,31 +166,34 @@ class GPR_NMR(generate_descriptors):
         else:
             estimator = GaussianProcessRegressor(kernel=RBF(), alpha=float(noise))
 
-
-        estimator.fit(train_X, train_target)
-
         cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
-
-        scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv, n_jobs=-1)
+        #cv = ShuffleSplit(n_splits=4, random_state=randomSeed, test_size=0.25, )
+        scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv, n_jobs=1)
         print('RMSE (4-fold CV):', np.mean(np.abs(scores_rmse)), '[ppm]', np.std(np.abs(scores_rmse)), '[ppm] (STDEV)')
 
-        scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1)
+        scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1)
         print('MAE (4-fold CV):', np.mean(np.abs(scores_mae)), '[ppm]', np.std(np.abs(scores_mae)), '[ppm] (STDEV)')
 
         if lc:
-            self._plot_learning_curve(estimator, X_data, target_data)
+            self._plot_learning_curve(estimator, X_data, target_data, title=self.descriptor_type)
 
         if parity_plot:
-            self._plot_correlation(target_path, estimator, train_X, test_X, train_target, test_target, threshold=np.mean(np.abs(scores_rmse)))
-
+            #self._plot_correlation(target_path, estimator, train_X, test_X, train_target, test_target, threshold=np.mean(np.abs(scores_rmse)))
+             print('Parity plot not supported atm.')
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(np.abs(scores_rmse))
 
-    def KRR_predict(self, kernel_degree, target_path, target_name, normalize, alpha,
-                lc=None, parity_plot=None):
+
+    def KRR_predict(self, kernel_degree, target_path, target_name, normalize, hold_out, alpha,
+                partitioned=False, lc=None, parity_plot=None):
 
         if self.mode == 'read':
 
-            X_data = self.read_descriptors()
+            X_data = []
+
+            for path_index in range(0, len(self.descriptor_path)):
+                X_data.append(self.read_descriptors(path_index))
+
+            X_data = X_data[0]  # only training data
 
         elif self.mode == 'write':
 
@@ -178,7 +201,7 @@ class GPR_NMR(generate_descriptors):
 
                 X_data = self.generate_SOAPs()
 
-            elif self.descriptor_type == 'APE_RF':
+            elif self.descriptor_type == 'APE-RF':
 
                 X_data = self.get_APE_RF()
 
@@ -213,16 +236,17 @@ class GPR_NMR(generate_descriptors):
 
         estimator.fit(train_X, train_target)
 
-        cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
+        #cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
+        cv = ShuffleSplit(n_splits=4, random_state=randomSeed, test_size=0.25)
 
-        scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv, n_jobs=-1)
+        scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv, n_jobs=1)
         print('RMSE (4-fold CV):', np.mean(np.abs(scores_rmse)), '[ppm]', np.std(np.abs(scores_rmse)), '[ppm] (STDEV)')
 
-        scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1)
+        scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1)
         print('MAE (4-fold CV):', np.mean(np.abs(scores_mae)), '[ppm]', np.std(np.abs(scores_mae)), '[ppm] (STDEV)')
 
         if lc:
-            self._plot_learning_curve(estimator, X_data, target_data)
+            self._plot_learning_curve(estimator, X_data, target_data, title=self.descriptor_type)
 
         if parity_plot:
             self._plot_correlation(target_path, estimator, train_X, test_X, train_target, test_target, threshold=np.mean(np.abs(scores_rmse)))
@@ -230,18 +254,28 @@ class GPR_NMR(generate_descriptors):
 
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(np.abs(scores_rmse))
 
-    def _plot_learning_curve(self, estimator, X_data, target_data):
+    def _plot_learning_curve(self, estimator, X_data, target_data, title):
         train_sizes, train_scores, test_scores = learning_curve(estimator, X_data, target_data,
-                                                                train_sizes=np.linspace(0.25, 1.0, 5),
-                                                                cv=ShuffleSplit(n_splits=4, test_size=0.25,
-                                                                random_state=42), scoring='r2')
+                                                                train_sizes=np.linspace(0.2, 1.0, 5),
+                                                                #cv=ShuffleSplit(n_splits=4, test_size=0.25,
+                                                                cv=KFold(n_splits=4, shuffle=True,
+                                                                random_state=42), scoring='neg_mean_absolute_error')
+
+        # TODO: fix CV in learning curves
+
         plt.figure()
         plt.plot(train_sizes, -train_scores.mean(axis=1), 'o-', color='r', label='Training score')
-        plt.plot(train_sizes, -test_scores.mean(axis=1), 'o-', color='g', label='Cross-validation score')
+        plt.plot(train_sizes, -test_scores.mean(axis=1), 'o-', color='g', label='Test score')
+        plt.fill_between(x=train_sizes, y1=-train_scores.mean(axis=1)-train_scores.std(axis=1),
+                         y2=-train_scores.mean(axis=1)+train_scores.std(axis=1), color='r', alpha=0.3)
+        plt.fill_between(x=train_sizes, y1=-test_scores.mean(axis=1)-test_scores.std(axis=1),
+                         y2=-test_scores.mean(axis=1)+test_scores.std(axis=1), color='g', alpha=0.3)
         plt.xlabel('Training examples')
-        plt.ylabel('Score')
+        plt.ylabel('MAE [ppm]')
         plt.legend(loc='best')
+        plt.title(title, fontsize=18)
         plt.grid()
+        plt.savefig(f'/home/alex/Desktop/lc_{title}.png', dpi=500, bbox_inches='tight')
         plt.show()
 
     def _plot_correlation(self, target_path, estimator, train_X, test_X,
@@ -250,9 +284,9 @@ class GPR_NMR(generate_descriptors):
         prediction = estimator.predict(test_X)
         correlation = r2_score(test_target, prediction)
 
-        target_data = pd.read_csv(f'{target_path}.csv')
+        target_data = pd.read_csv(f'{target_path[0]}')
         shifts = target_data['Experimental']
-        compound_names = target_data['Name']
+        compound_names = target_data['Name'] # TODO: Add compound names in hold out
 
         residuals = [observed - pred for observed, pred in zip(test_target, prediction)]
 
@@ -279,6 +313,8 @@ class GPR_NMR(generate_descriptors):
         plt.ylabel('Predicted [ppm]')
         plt.title(f'Parity plot ($R^2$ = {correlation:.2f})')
         plt.show()
+
+        # TODO: Add feature to to show parity plot for holdout set
 
     def _plot_hyperparameters(self, estimator):
         sigma_0_range = np.logspace(-5, 5, num=10)

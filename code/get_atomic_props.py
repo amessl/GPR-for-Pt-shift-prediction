@@ -1,4 +1,3 @@
-
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -98,6 +97,7 @@ class AtomPropsDist:
             distance_list.append(distance)
 
         xyz_neighbor_list = []
+        xyz_neighbor_set = set()
         neighbor_distance_list = []
 
         with open('atomic_props.json') as ap_data_file:
@@ -111,12 +111,13 @@ class AtomPropsDist:
 
             if atomic_radii_sum_A > distance_list[index]:
                 xyz_neighbor_list.append(adjacent_atom_symbol_list[index])
+                xyz_neighbor_set.add(adjacent_atom_symbol_list[index])
                 neighbor_distance_list.append(distance_list[index])
                 mean_distance = statistics.mean(neighbor_distance_list)
 
 
         return xyz_neighbor_list, mean_distance, neighbor_distance_list, distance_list, \
-            adjacent_atom_symbol_list, central_atom_coords, adjacent_atom_coords_list
+            adjacent_atom_symbol_list, central_atom_coords, adjacent_atom_coords_list, xyz_neighbor_set
 
     def get_distances_smiles(self, max_valency):
         """
