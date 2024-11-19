@@ -1,0 +1,17 @@
+{
+    "target": {
+        "original_target": "/home/alex/Pt_NMR/data/labels/final_data_corrected",
+        "clustered_target": "/home/alex/Pt_NMR/data/labels/final_data_corrected_dbscan_pca",
+        "split_target": "/home/alex/Pt_NMR/data/labels/train_test_split/"
+    },
+
+    "structures": {
+        "original_xyz": "/home/alex/Pt_NMR/data/structures/total/",
+        "split_xyz": "/home/alex/Pt_NMR/data/structures/"
+    },
+
+    "clustering": {
+        "clustering_features": "/home/alex/Pt_NMR/data/representations/SIF/",
+        "clustering_params": [0.5, 5, 2]
+    }
+}

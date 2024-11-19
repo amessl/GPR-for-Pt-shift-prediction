@@ -48,7 +48,7 @@ class generate_descriptors:
 
         self.xyz_base = xyz_base
 
-    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=False):
+    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=False, path_index=0):
 
         """
         Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
@@ -66,15 +66,15 @@ class generate_descriptors:
         """
 
         APE_RF_dataset = []
-        xyz_filenames = sorted(os.listdir(self.xyz_path[0]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
+        xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        APE_RF_path = os.path.join(self.descriptor_path[0], '_'.join(str(param) for param in self.descriptor_params))
+        APE_RF_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(param) for param in self.descriptor_params))
 
         os.makedirs(APE_RF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
             apd = AtomPropsDist(central_atom=self.central_atom, xyz_base=self.xyz_base,
-                                  xyz_path=os.path.join(self.xyz_path[0], xyz_filename))
+                                  xyz_path=os.path.join(self.xyz_path[path_index], xyz_filename))
 
             qmol = apd.get_qmol()
 
@@ -135,7 +135,7 @@ class generate_descriptors:
         partitioned_data = []
 
         for path_index in range(0, len(self.xyz_path)):
-            subset = self.get_APE_RF()
+            subset = self.get_APE_RF(format='xyz', mode='all', smooth_cutoff=False, path_index=path_index)
             partitioned_data.append(subset)
 
         return partitioned_data

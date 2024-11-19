@@ -1,6 +1,10 @@
-import grid_search_CV as grid
+#!/usr/bin/env python3
 
-def main(input_data):
+import grid_search_CV as grid
+import argparse
+
+
+def main(input_data, representation):
     hyperparams = []
     paths = []
     n_procs = 1
@@ -27,18 +31,25 @@ def main(input_data):
             elif section == 'paths':
                 paths.append([x.strip("'") for x in line.split()])
 
-    model = str(input('Representation ("SOAP" or "APE_RF"): '))
-
-    if model == 'APE_RF':
+    if representation == 'APE_RF':
         grid.tune_APE_RF_hyperparams(*hyperparams, paths[0], n_procs=n_procs)
 
-    elif model == 'SOAP':
+    elif representation == 'SOAP':
         grid.tune_SOAP_hyperparams(*hyperparams, paths[0], n_procs=n_procs)
 
     else:
-        raise ValueError(f"Invalid model option: {model}. Choose APE_RF or SOAP.")
+        raise ValueError(f"Invalid representation option: {representation}. Choose APE_RF or SOAP.")
+
+    return hyperparams, paths, n_procs
 
 if __name__ == '__main__':
+    parsing = argparse.ArgumentParser(description='Run grid search for hyperparameter optimization')
 
+    parsing.add_argument('--input', '-i', type=str, help='Provide the path to the input file '
+                                                   'for the hyperarameter optimization', required=True)
 
-    main(input('Input file: '))
+    parsing.add_argument('--rep', '-r', type=str, help='Provide the name of the representation '
+                                                 'you want to use (SOAP or APE_RF)', required=True)
+    args = parsing.parse_args()
+
+    main(args.input, args.rep)

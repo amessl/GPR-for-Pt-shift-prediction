@@ -87,7 +87,12 @@ class GPR_NMR(generate_descriptors):
             for path_index in range(0, len(self.descriptor_path)):
                 X_data.append(self.read_descriptors(path_index))
 
-            X_data = X_data[0]  # only training data
+            if partitioned:
+                X_data = X_data[0]
+                hold_out = X_data[1]
+
+            else:
+                X_data = X_data[0]  # only training data
 
         elif self.mode == 'write':
 
@@ -95,13 +100,14 @@ class GPR_NMR(generate_descriptors):
 
                 if partitioned:
                     X_data = self.generate_SOAPs_partitioned()[0]
+                    hold_out = self.generate_SOAPs_partitioned()[1]
                 else:
                     X_data = self.generate_SOAPs()
 
-            elif self.descriptor_type == 'APE-RF':
+            elif self.descriptor_type == 'APE_RF':
 
                 if partitioned:
-                    X_data = self.get_APE_RF_partitioned()[0]
+                    X_data = self.get_APE_RF_partitioned()[0] # TODO: Refactor
                 else:
                     X_data = self.get_APE_RF(smooth_cutoff=False)
 
@@ -116,16 +122,18 @@ class GPR_NMR(generate_descriptors):
             raise Exception('Mode has to be specified as "read" for using pre-generated descriptors \n'
                             'or "write" for generating new descriptors and passing them as input"')
 
+
         if normalize:
             X_data = Normalizer(norm='l2').fit_transform(X_data)
+            hold_out = Normalizer(norm='l2').fit_transform(hold_out)
 
         if partitioned:
 
             target_training_data = pd.read_csv(f'{target_path[0]}')
-            target_test_data = pd.read_csv(f'{target_path[1]}')
+            target_holdout = pd.read_csv(f'{target_path[1]}')
 
             sorted_train = target_training_data.sort_values(by='Index')
-            sorted_test = target_test_data.sort_values(by='Index')
+            sorted_test = target_holdout.sort_values(by='Index')
 
             target_data = sorted_train[str(target_name)]
 
@@ -167,7 +175,7 @@ class GPR_NMR(generate_descriptors):
             estimator = GaussianProcessRegressor(kernel=RBF(), alpha=float(noise))
 
         cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
-        #cv = ShuffleSplit(n_splits=4, random_state=randomSeed, test_size=0.25, )
+
         scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv, n_jobs=1)
         print('RMSE (4-fold CV):', np.mean(np.abs(scores_rmse)), '[ppm]', np.std(np.abs(scores_rmse)), '[ppm] (STDEV)')
 

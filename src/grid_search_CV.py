@@ -1,17 +1,16 @@
+import os
 from NMR_predict import GPR_NMR
 import itertools
 from multiprocessing import Pool
-from joblib import delayed, Parallel
-import os
 import shutil
 
 
 def eval_APE_RF_hyperparams(hyperparams, paths):
 
     rcut, dim, noise, kernel_degree = hyperparams
-    descriptor_paths = paths[0]
-    xyz_paths = paths[2]
-    target_paths = paths[4]
+    descriptor_paths = paths[:2]
+    xyz_paths = paths[2:4]
+    target_paths = paths[4:6]
 
     model = GPR_NMR(descriptor_params=[rcut, dim],
                     descriptor_path=descriptor_paths,
@@ -28,7 +27,7 @@ def eval_APE_RF_hyperparams(hyperparams, paths):
     return hyperparams, errors_std[0]
 
 
-def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths, n_procs):
+def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths, n_procs, burn=False):
 
     param_grid = {
         'rcut': rcut_grid,
@@ -44,10 +43,8 @@ def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths,
     best_params = None
     top_candidates = []
 
-
     with Pool(processes=n_procs) as pool:
-        results = pool.map(lambda comb: eval_APE_RF_hyperparams(comb, paths), param_combinations)
-
+        results = pool.starmap(eval_APE_RF_hyperparams, [(params, paths) for params in param_combinations])
 
     for params, mae in results:
         print('Errors of hyperparameter combination:', params, mae)
@@ -60,10 +57,18 @@ def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths,
         elif abs(mae - best_mae) <= min_diff:
             top_candidates.append(dict(zip(param_grid.keys(), params)))
 
-    print('Grid search terminated normally.')
     print(f"Optimized hyperparameters: {best_params}")
     print(f"Lowest cross-validated MAE: {best_mae}")
     print("Other top hyperparameter combinations within MAE tolerance:", top_candidates)
+
+    if burn:
+        for params_list in param_combinations:
+            for path in paths[:2]:
+                descriptor_folder = os.path.join(path, f'{str(params_list[0])}_{str(params_list[1])}')
+                if os.path.exists(descriptor_folder):
+                    shutil.rmtree(descriptor_folder)
+                else:
+                    pass
 
     return best_params, best_mae
 
@@ -103,9 +108,8 @@ def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_gr
     best_params = None
     top_candidates = []
 
-    results = Parallel(n_jobs=n_procs)(delayed(eval_SOAP_hyperparams)(params, paths) for params in param_combinations)
-
-    # TODO: Restrict number of CPUs
+    with Pool(processes=n_procs) as pool:
+        results = pool.starmap(eval_SOAP_hyperparams, [(params, paths) for params in param_combinations])
 
     for params, mae in results:
         print('Errors of hyperparameter combination:', params, mae)
@@ -117,7 +121,6 @@ def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_gr
         elif abs(mae - best_mae) <= min_diff:
             top_candidates.append(dict(zip(param_grid.keys(), params)))
 
-    print('Grid search terminated normally.')
     print(f"Optimized hyperparameters: {best_params}")
     print(f"Lowest cross-validated MAE: {best_mae}")
     print("Other top hyperparameter combinations within MAE tolerance:", top_candidates)
@@ -136,3 +139,4 @@ def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_gr
         print('Representation files removed. To keep them set burn=False')
 
     return best_params, best_mae
+

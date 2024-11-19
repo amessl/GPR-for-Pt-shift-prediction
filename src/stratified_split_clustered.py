@@ -10,6 +10,8 @@ import matplotlib.colors as mcolors
 import os
 import shutil
 from astropy.visualization import hist
+import argparse
+import json
 
 
 def get_clusters(descriptor_path, xyz_path, eps, min_samples,
@@ -148,29 +150,46 @@ def stratified_split(target_path, xyz_path, split_target_path, split_xyz_dir, sa
     else:
         print('Indexed Train/Test split not saved. Set "save_split=True" to save splits.')
 
-    return
+    return index_train, index_test, y_train, y_test
 
 
-SIF_dir = '/home/alex/Pt_NMR/data/representations/SIF/'
-XYZ_dir = '/home/alex/Pt_NMR/data/structures/total/'
+if __name__ == '__main__':
+    parsing = argparse.ArgumentParser(description='Create stratified train-test-split based on '
+                                                  'cluster labels obtained using DBSCAN.')
 
-target_path_original = '/home/alex/Pt_NMR/data/labels/final_data_corrected'
-target_name = 'Experimental'
+    parsing.add_argument('--input', '-i', type=str, help='Provide path to JSON file containing required paths '
+                                                         'to target data, structures and clustering parameters',
+                                                                                                    required=True)
 
-#get_clusters(descriptor_path=SIF_dir, xyz_path=XYZ_dir, eps=0.5, min_samples=5,
-#             save_clusters=True, target_path=target_path_original, red_dim=True,
-#             n_comp=2, plot_clusters=True)
+    parsing.add_argument('--pca', help='Specify if PCA is to be performed before clustering',
+                         action=argparse.BooleanOptionalAction)
+
+    args = parsing.parse_args()
+
+    categories = ['target', 'structures', 'clustering']
+
+    with open(args.input) as file:
+        input_data = json.load(file)
+
+    target_paths = input_data[categories[0]]
+    structure_paths = input_data[categories[1]]
+    cluster_params = input_data[categories[2]]
+
+    if args.pca:
+
+        get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
+                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
+                     save_clusters=True, target_path=target_paths['original_target'], red_dim=True,
+                     n_comp=cluster_params['clustering_params'][2], plot_clusters=True)
+
+    else:
+
+        get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
+                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
+                     save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=True)
 
 
-target_path_indexed = '/home/alex/Pt_NMR/data/labels/final_data_corrected_dbscan_pca'
 
-split_target_path = '/home/alex/Pt_NMR/data/labels/train_test_split/'
-
-
-
-stratified_split(target_path_indexed, xyz_path=XYZ_dir, split_target_path=split_target_path,
-                 split_xyz_dir='/home/alex/Pt_NMR/data/structures/', save_split=True)
-
-
-
-
+    stratified_split(target_paths['clustered_target'], xyz_path=structure_paths['original_xyz'],
+                     split_target_path=target_paths['split_target'], split_xyz_dir=structure_paths['split_xyz'],
+                     save_split=True)
