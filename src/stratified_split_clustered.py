@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from generate_descriptors import generate_descriptors
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -9,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import os
 import shutil
+from scipy.stats import ks_2samp
 from astropy.visualization import hist
 import argparse
 import json
@@ -46,16 +49,6 @@ def get_clusters(descriptor_path, xyz_path, eps, min_samples,
     print(f'Number of clusters found with DBSCAN: {n_clusters}')
     print('\n')
 
-    labels_occuring_once = unique_labels[counts == 1]
-
-    if labels_occuring_once is not None:
-        print(f'Cluster labels that occur only once: {labels_occuring_once}')
-        print('\n')
-
-    else:
-        print('No lonely clusters detected.')
-        print('\n')
-
     if plot_clusters:
 
         if n_comp == 2:
@@ -90,14 +83,44 @@ def get_clusters(descriptor_path, xyz_path, eps, min_samples,
         total_data['dbscan_pca_1'] = list(clusters)
         total_data.to_csv(f'{target_path}_dbscan_pca.csv')
 
-        print(f'Target data together with cluster labels saved to: {target_path}_dbscan_pca.csv')
+        print(f'Target data together with cluster labels saved to: \n {target_path}_dbscan_pca.csv')
         print('\n')
 
-    return clusters, n_clusters
+    lonely_labels = unique_labels[counts == 1]
+
+    if lonely_labels is not None:
+        print(f'Cluster labels that occur only once: {lonely_labels}')
+        print('\n')
+
+        clustered_target = pd.read_csv(f'{target_path}_dbscan_pca.csv')
+
+        for label in lonely_labels:
+
+            lonely_label_df = clustered_target[clustered_target['dbscan_pca_1'] == label]
+            lonely_label_df.to_csv(f'lonely_cluster_{label}.csv', index=False)
+
+            index_name = clustered_target[clustered_target['dbscan_pca_1'] == label].index
 
 
-def stratified_split(target_path, xyz_path, split_target_path, split_xyz_dir, save_split=True, plot_dist=True):
-    total_data_cluster_labels = pd.read_csv(f'{target_path}.csv')
+            clustered_target = clustered_target.drop(index_name[0])
+
+            print(clustered_target[180:195])
+
+            print(
+                f'Target values corresponding to lonely clusters moved from target data to file: \n '
+                f'lonely_cluster_{label}.txt', '\n')
+
+    else:
+        print('No lonely clusters detected.')
+        print('\n')
+
+    return clusters, clustered_target
+
+
+def stratified_split(target_data, xyz_path, split_target_path, split_xyz_dir, save_split=True, plot_dist=True):
+    total_data_cluster_labels = target_data
+
+    print(total_data_cluster_labels[180:195])
 
     target_data = total_data_cluster_labels['Experimental']
     cluster_labels = total_data_cluster_labels['dbscan_pca_1']
@@ -153,6 +176,20 @@ def stratified_split(target_path, xyz_path, split_target_path, split_xyz_dir, sa
     return index_train, index_test, y_train, y_test
 
 
+def test_target_dist(train_targets, test_targets):
+
+    print('Performing Kolmogorov-Smirnov Test to compare target distribution in stratified split.', '\n')
+    ks_stat, p_value = ks_2samp(train_targets, test_targets)
+
+    print('KS Stats:', ks_stat)
+    print('p-value:', p_value)
+
+    return ks_stat, p_value
+
+
+
+
+
 if __name__ == '__main__':
     parsing = argparse.ArgumentParser(description='Create stratified train-test-split based on '
                                                   'cluster labels obtained using DBSCAN.')
@@ -162,6 +199,9 @@ if __name__ == '__main__':
                                                                                                     required=True)
 
     parsing.add_argument('--pca', help='Specify if PCA is to be performed before clustering',
+                         action=argparse.BooleanOptionalAction)
+
+    parsing.add_argument('--ks', help='Specify if KS test is to be performed after stratified split.',
                          action=argparse.BooleanOptionalAction)
 
     args = parsing.parse_args()
@@ -177,19 +217,22 @@ if __name__ == '__main__':
 
     if args.pca:
 
-        get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
-                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
-                     save_clusters=True, target_path=target_paths['original_target'], red_dim=True,
-                     n_comp=cluster_params['clustering_params'][2], plot_clusters=True)
+        clusters, clustered_targets = get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
+                                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
+                                     save_clusters=True, target_path=target_paths['original_target'], red_dim=True,
+                                     n_comp=cluster_params['clustering_params'][2], plot_clusters=True)
 
     else:
 
-        get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
-                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
-                     save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=True)
+        clusters, clustered_targets = get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
+                                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
+                                     save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=True)
 
 
 
-    stratified_split(target_paths['clustered_target'], xyz_path=structure_paths['original_xyz'],
-                     split_target_path=target_paths['split_target'], split_xyz_dir=structure_paths['split_xyz'],
-                     save_split=True)
+    index_train, index_test, y_train, y_test = stratified_split(target_data=clustered_targets, xyz_path=structure_paths['original_xyz'],
+                                                 split_target_path=target_paths['split_target'], split_xyz_dir=structure_paths['split_xyz'],
+                                                 save_split=True)
+
+    if args.ks:
+        test_target_dist(y_train, y_test)
