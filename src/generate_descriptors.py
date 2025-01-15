@@ -1,17 +1,16 @@
 import numpy as np
 import os
-from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolfiles
 from ase import Atoms
 from dscribe.descriptors import SOAP
 from get_atomic_props import AtomPropsDist
-import shutil
+import matplotlib.pyplot as plt
 
 
 
 class generate_descriptors:
 
-    def __init__(self, descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base):
+    def __init__(self, descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base, normalize):
 
         """
         Initialize class for generating descriptors (currently only APE_RF and SOAP are supported),
@@ -47,6 +46,7 @@ class generate_descriptors:
             raise ValueError("Paths should be a string or a list of strings")
 
         self.xyz_base = xyz_base
+        self.normalize = normalize
 
     def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=False, path_index=0):
 
@@ -116,18 +116,19 @@ class generate_descriptors:
             central_gaussian = central_gaussian * smoothing
 
             APE_RF_dataset.append(central_gaussian.flatten())
-            APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.txt'
+            APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
 
             np.save(os.path.join(APE_RF_path, APE_RF_file), central_gaussian)
 
-        return APE_RF_dataset
+
+        return np.array(APE_RF_dataset)
 
     def get_APE_RF_partitioned(self):
         path_lists = [self.xyz_path, self.descriptor_path]
 
         for path_list in path_lists:
             if not isinstance(path_list, list):
-                raise ValueError('When generating APE_RF for partitioned dataset'
+                raise ValueError('When generating descriptors for partitioned dataset'
                                  'provide list of xyz_paths and descriptor_paths'
                                  'that correspond to the subsets of the total dataset'
                                  'that has been partitioned. Specify path to'
@@ -140,27 +141,16 @@ class generate_descriptors:
 
         return partitioned_data
 
-    def generate_SOAPs(self, path_index=0):
+    def get_total_species(self):
 
-        """
-        Generate the SOAP-descriptor using the DScribe-library (Comput. Phys. Comm. 247 (2020) 106949)
-        and save the output array as .npy-file. Descriptor parameters are specified when creating an
-        instance of this class. Order of SOAP-parameters: [r_cut, n_max, l_max].
+        path = self.xyz_path[0].replace('train_split', 'total')
 
-        :param path_index: List index of path to structures and descriptors
-                           (Default is changed in partitioned method)
-
-        :return:
-        n x p-array of SOAP-vectors, where n is the number of samples (structures) and p the
-        dimensionality of each SOAP-vector (dimensionality can be very high depending on
-        the settings of the SOAP-parameters).
-        """
-
-        xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
+        xyz_filenames = sorted(os.listdir(path),
+                               key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
         set_of_species = set()
 
         for xyz_filename in xyz_filenames:
-            xyz_file_path = os.path.join(self.xyz_path[path_index], xyz_filename)
+            xyz_file_path = os.path.join(path, xyz_filename)
 
             try:
 
@@ -182,7 +172,30 @@ class generate_descriptors:
                 pass
 
         species = list(set_of_species)
-        print('Species present in dataset:', species)
+
+        return species
+
+    def generate_SOAPs(self, path_index=0):
+
+        """
+        Generate the SOAP-descriptor using the DScribe-library (Comput. Phys. Comm. 247 (2020) 106949)
+        and save the output array as .npy-file. Descriptor parameters are specified when creating an
+        instance of this class. Order of SOAP-parameters: [r_cut, n_max, l_max].
+
+        :param path_index: List index of path to structures and descriptors
+                           (Default is changed in partitioned method)
+
+        :return:
+        n x p-array of SOAP-vectors, where n is the number of samples (structures) and p the
+        dimensionality of each SOAP-vector (dimensionality can be very high depending on
+        the settings of the SOAP-parameters).
+        """
+        species = self.get_total_species()
+
+        xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]),
+                               key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
+
+        #print('Species present in dataset:', species)
 
         # Setting up SOAPs with DScribe library
         SOAP_dataset = []
@@ -217,6 +230,9 @@ class generate_descriptors:
 
                 soap_power_spectrum = soap.create(atoms, centers=central_atom_index)
 
+                if self.normalize:
+                    soap_power_spectrum = soap_power_spectrum / np.linalg.norm(soap_power_spectrum)
+
                 SOAP_dataset.append(soap_power_spectrum.flatten())
 
                 SOAP_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.npy'
@@ -229,6 +245,7 @@ class generate_descriptors:
 
                 pass
 
+
         return np.array(SOAP_dataset)
 
 
@@ -237,9 +254,8 @@ class generate_descriptors:
         path_lists = [self.xyz_path, self.descriptor_path]
 
         for path_list in path_lists:
-            print(path_list, type(path_list))
             if not isinstance(path_list, list):
-                raise ValueError('When generating SOAPs for partitioned dataset '
+                raise ValueError('When generating descriptors for partitioned dataset '
                                  'provide list of xyz_paths and descriptor_paths that correspond to the subsets '
                                  'of the total dataset that has been partitioned. Specify path to '
                                  'training data first.')
@@ -252,20 +268,20 @@ class generate_descriptors:
         return partitioned_data
 
 
-    def get_SIF(self, format='xyz', mode='neighbors'):
+    def get_SIF(self, path_index=0, format='xyz', mode='neighbors'):
 
         SIF_dataset = []
         mean_EN_dataset = []
 
-        xyz_filenames = sorted(os.listdir(self.xyz_path[0]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
+        xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        SIF_path = os.path.join(self.descriptor_path[0], '_'.join(str(param) for param in self.descriptor_params))
+        SIF_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(param) for param in self.descriptor_params))
 
         os.makedirs(SIF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
             apd = AtomPropsDist(central_atom=self.central_atom, xyz_base=self.xyz_base,
-                                xyz_path=os.path.join(self.xyz_path[0], xyz_filename))
+                                xyz_path=os.path.join(self.xyz_path[path_index], xyz_filename))
 
             qmol = apd.get_qmol()
             mean_EN = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[1]
@@ -279,5 +295,22 @@ class generate_descriptors:
             SIF_dataset.append(feature_vector)
             mean_EN_dataset.append(mean_EN_vector)
 
-
         return SIF_dataset, mean_EN_dataset, xyz_filenames
+
+    def get_SIF_partitioned(self):
+
+        path_lists = [self.xyz_path, self.descriptor_path]
+
+        for path_list in path_lists:
+            if not isinstance(path_list, list):
+                raise ValueError('When generating descriptors for partitioned dataset '
+                                 'provide list of xyz_paths and descriptor_paths that correspond to the subsets '
+                                 'of the total dataset that has been partitioned. Specify path to '
+                                 'training data first.')
+        partitioned_data = []
+
+        for path_index in range(0, len(self.xyz_path)):
+            subset = self.get_SIF(path_index, format='xyz', mode='neighbors')[0]
+            partitioned_data.append(subset)
+
+        return partitioned_data

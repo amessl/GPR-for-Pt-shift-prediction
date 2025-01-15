@@ -4,13 +4,25 @@ import grid_search_CV as grid
 import argparse
 
 
-def main(input_data, representation):
+def main(input_file, representation):
+
+    """
+    Reads input data for carrying out the grid search for finding the best
+    hyperparameter combinations for APE-RF/SOAP in combination with a
+    Gaussian Process Regressor.
+
+    :param input_file: Path to the input file
+    :param representation: Which representation to use ('APE-RF' or 'SOAP')
+    :return: Hyperparameter grid, paths to representations,
+    structures and targets and number of processes
+    """
+
     hyperparams = []
     paths = []
     n_procs = 1
     section = None
 
-    with open(input_data, 'r') as file:
+    with open(input_file, 'r') as file:
         for line in file:
             line = line.strip()
 
@@ -43,6 +55,7 @@ def main(input_data, representation):
     return hyperparams, paths, n_procs
 
 if __name__ == '__main__':
+    # Call function via command line and specify arguments as flags
     parsing = argparse.ArgumentParser(description='Run grid search for hyperparameter optimization')
 
     parsing.add_argument('--input', '-i', type=str, help='Provide the path to the input file '

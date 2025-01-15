@@ -18,12 +18,12 @@ import json
 
 
 def get_clusters(descriptor_path, xyz_path, eps, min_samples,
-                 save_clusters=True, target_path=None, red_dim=True,
+                 save_clusters=False, target_path=None, red_dim=True,
                  n_comp=None, plot_clusters=True):
 
     gen = generate_descriptors(descriptor_params=['EN', 'alpha', 'val', 'qmol'],
                                descriptor_path=descriptor_path, central_atom='Pt', xyz_path=xyz_path,
-                               xyz_base='st_')
+                               xyz_base='st_', normalize=False)
     X_data = gen.get_SIF()[0]
 
     scaler = StandardScaler()
@@ -117,17 +117,22 @@ def get_clusters(descriptor_path, xyz_path, eps, min_samples,
     return clusters, clustered_target
 
 
-def stratified_split(target_data, xyz_path, split_target_path, split_xyz_dir, save_split=True, plot_dist=True):
+def stratified_split(target_data, xyz_path, split_target_path, split_xyz_dir, save_split=False, plot_dist=True):
     total_data_cluster_labels = target_data
 
-    print(total_data_cluster_labels[180:195])
+    #print(total_data_cluster_labels[180:195])
 
     target_data = total_data_cluster_labels['Experimental']
     cluster_labels = total_data_cluster_labels['dbscan_pca_1']
     target_index_labels = total_data_cluster_labels['Index']
+    compound_names = total_data_cluster_labels['Name']
 
     index_train, index_test, \
         y_train, y_test = train_test_split(target_index_labels, target_data,
+                                           stratify=cluster_labels, random_state=42, test_size=0.2)
+
+    names_train, names_test, \
+        y_train, y_test = train_test_split(compound_names, target_data,
                                            stratify=cluster_labels, random_state=42, test_size=0.2)
 
     xyz_train_path = os.path.join(split_xyz_dir, 'train_split')
@@ -153,12 +158,12 @@ def stratified_split(target_data, xyz_path, split_target_path, split_xyz_dir, sa
 
         os.makedirs(split_target_path, exist_ok=True)
 
-        indexed_targets_train = np.column_stack((index_train, y_train))
-        indexed_targets_train_df = pd.DataFrame(indexed_targets_train, columns=["Index", "Experimental"])
+        indexed_targets_train = np.column_stack((index_train, y_train, names_train))
+        indexed_targets_train_df = pd.DataFrame(indexed_targets_train, columns=["Index", "Experimental", "Name"])
         indexed_targets_train_df.to_csv(os.path.join(split_target_path, 'indexed_targets_train.csv'), index=False)
 
-        indexed_targets_test = np.column_stack((index_test, y_test))
-        indexed_targets_test_df = pd.DataFrame(indexed_targets_test, columns=["Index", "Experimental"])
+        indexed_targets_test = np.column_stack((index_test, y_test, names_test))
+        indexed_targets_test_df = pd.DataFrame(indexed_targets_test, columns=["Index", "Experimental", "Name"])
         indexed_targets_test_df.to_csv(os.path.join(split_target_path, 'indexed_targets_test.csv'), index=False)
 
     if plot_dist:
@@ -186,9 +191,8 @@ def test_target_dist(train_targets, test_targets):
 
     return ks_stat, p_value
 
-
-
-
+# TODO: Table with data hyperparameter optimization data
+# TODO: Table with test error for each top candidate (table as csv)
 
 if __name__ == '__main__':
     parsing = argparse.ArgumentParser(description='Create stratified train-test-split based on '
@@ -218,21 +222,21 @@ if __name__ == '__main__':
     if args.pca:
 
         clusters, clustered_targets = get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
-                                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
-                                     save_clusters=True, target_path=target_paths['original_target'], red_dim=True,
-                                     n_comp=cluster_params['clustering_params'][2], plot_clusters=True)
+                                      eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
+                                      save_clusters=True, target_path=target_paths['original_target'], red_dim=True,
+                                      n_comp=cluster_params['clustering_params'][2], plot_clusters=True)
 
     else:
 
         clusters, clustered_targets = get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
-                                     eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
-                                     save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=True)
+                                      eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
+                                      save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=True)
 
 
 
     index_train, index_test, y_train, y_test = stratified_split(target_data=clustered_targets, xyz_path=structure_paths['original_xyz'],
-                                                 split_target_path=target_paths['split_target'], split_xyz_dir=structure_paths['split_xyz'],
-                                                 save_split=True)
+                                               split_target_path=target_paths['split_target'], split_xyz_dir=structure_paths['split_xyz'],
+                                               save_split=True)
 
     if args.ks:
         test_target_dist(y_train, y_test)

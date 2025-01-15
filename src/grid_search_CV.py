@@ -7,6 +7,14 @@ import shutil
 
 def eval_APE_RF_hyperparams(hyperparams, paths):
 
+    """
+    Evaluates cross-validated mean absolute error (MAE) for a given hyperparameter combination (APE-RF)
+
+    :param hyperparams: List of hyperparameters
+    :param paths: List of paths to representations, structures (xyz-files) and target data
+    :return: List of hyperparameters and corresponding MAE
+    """
+
     rcut, dim, noise, kernel_degree = hyperparams
     descriptor_paths = paths[:2]
     xyz_paths = paths[2:4]
@@ -16,18 +24,29 @@ def eval_APE_RF_hyperparams(hyperparams, paths):
                     descriptor_path=descriptor_paths,
                     central_atom='Pt',
                     xyz_path=xyz_paths, xyz_base='st_',
-                    descriptor_type='APE_RF', mode='write')
+                    descriptor_type='APE_RF', mode='write',
+                    target_path=target_paths)
 
-    errors_std = model.GPR_predict(kernel_degree=kernel_degree,
-                                   target_path=target_paths,
-                                   target_name='Experimental',
-                                   normalize=False, noise=noise,
-                                   partitioned=True)
+    errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=True)  # sklearn backend
 
     return hyperparams, errors_std[0]
 
 
 def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths, n_procs, burn=False):
+
+    """
+    Parallel exhaustive grid search iterating over all hyperparameter combinations specified
+    by the corresponding grids to find the combination yielding the minimal MAE (for APE-RF)
+
+    :param rcut_grid: List of cutoff radii to iterate over
+    :param dim_grid: List of feature dimensions to iterate over
+    :param noise_grid: List of noise values to iterate over
+    :param kernel_grid: List of polynomial kerel degrees to iterate over
+    :param paths: List of paths
+    :param n_procs: Number of parallel processes
+    :param burn: Whether to keep all representation files or remove them after the optiimization
+    :return: Parameter combination yielding the minimal MAE and the MAE
+    """
 
     param_grid = {
         'rcut': rcut_grid,
@@ -73,6 +92,15 @@ def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths,
     return best_params, best_mae
 
 def eval_SOAP_hyperparams(hyperparams, paths):
+
+    """
+     Evaluates cross-validated mean absolute error (MAE) for a given hyperparameter combination (SOAP)
+
+     :param hyperparams: List of hyperparameters
+     :param paths: List of paths to representations, structures (xyz-files) and target data
+     :return: List of hyperparameters and corresponding MAE
+     """
+
     rcut, nmax, lmax, noise, kernel_degree = hyperparams
     descriptor_paths = paths[:2]
     xyz_paths = paths[2:4]
@@ -82,17 +110,28 @@ def eval_SOAP_hyperparams(hyperparams, paths):
                     descriptor_path=descriptor_paths,
                     central_atom='Pt',
                     xyz_path=xyz_paths, xyz_base='st_',
-                    descriptor_type='SOAP', mode='write')
+                    descriptor_type='SOAP', mode='write', target_path=target_paths)
 
-    errors_std = model.GPR_predict(kernel_degree=kernel_degree,
-                                   target_path=target_paths,
-                                   target_name='Experimental',
-                                   normalize=True, noise=noise,
-                                   partitioned=True)
+    errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=True) # sklearn backend
 
     return hyperparams, errors_std[0]
 
 def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_grid, paths, n_procs, burn=True):
+
+    """
+        Parallel exhaustive grid search iterating over all hyperparameter combinations specified
+        by the corresponding grids to find the combination yielding the minimal MAE (for SOAP)
+
+        :param rcut_grid: List of cutoff radii to iterate over
+        :param nmax_grid: List of max number of radial basis functions to iterate over
+        :param lmax_grid: List of maximum degree of spherical harmonics to iterate over
+        :param kernel_grid: List of polynomial kernel degrees to iterate over
+        :param paths: List of paths
+        :param n_procs: Number of parallel processes
+        :param burn: Whether to keep all representation files or remove them after the optiimization
+        :return: Parameter combination yielding the minimal MAE and the MAE
+        """
+
     param_grid = {
         'rcut': rcut_grid,
         'nmax': nmax_grid,
@@ -112,7 +151,7 @@ def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_gr
         results = pool.starmap(eval_SOAP_hyperparams, [(params, paths) for params in param_combinations])
 
     for params, mae in results:
-        print('Errors of hyperparameter combination:', params, mae)
+        print('Errors of hyperparameter combination:', params, mae) # TODO: iterate total MAE list for lowest and top candidates
 
         if mae < best_mae:
             best_mae = mae
@@ -133,8 +172,6 @@ def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_gr
                     shutil.rmtree(descriptor_folder)
                 else:
                     pass
-
-    # TODO: Update APE_RF generation and grid_search with all features (parallelization with joblib, burn, etc.)
 
         print('Representation files removed. To keep them set burn=False')
 
