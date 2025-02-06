@@ -78,6 +78,7 @@ def get_clusters(descriptor_path, xyz_path, eps, min_samples,
 
 
     if save_clusters:
+        print(len(clusters))
         total_data = pd.read_csv(f'{target_path}.csv')
 
         total_data['dbscan_pca_1'] = list(clusters)
@@ -104,7 +105,7 @@ def get_clusters(descriptor_path, xyz_path, eps, min_samples,
 
             clustered_target = clustered_target.drop(index_name[0])
 
-            print(clustered_target[180:195])
+            # print(clustered_target[180:195])
 
             print(
                 f'Target values corresponding to lonely clusters moved from target data to file: \n '
@@ -137,6 +138,12 @@ def stratified_split(target_data, xyz_path, split_target_path, split_xyz_dir, sa
 
     xyz_train_path = os.path.join(split_xyz_dir, 'train_split')
     xyz_test_path = os.path.join(split_xyz_dir, 'test_split')
+
+    if os.path.exists(xyz_train_path):
+        shutil.rmtree(xyz_train_path)
+
+    if os.path.exists(xyz_test_path):
+        shutil.rmtree(xyz_test_path)
 
     os.makedirs(xyz_train_path, exist_ok=True)
     os.makedirs(xyz_test_path, exist_ok=True)
@@ -230,7 +237,7 @@ if __name__ == '__main__':
 
         clusters, clustered_targets = get_clusters(descriptor_path=cluster_params['clustering_features'], xyz_path=structure_paths['original_xyz'],
                                       eps=cluster_params['clustering_params'][0], min_samples=cluster_params['clustering_params'][1],
-                                      save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=True)
+                                      save_clusters=True, target_path=target_paths['original_target'], red_dim=False, plot_clusters=False)
 
 
 

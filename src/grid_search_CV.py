@@ -1,11 +1,12 @@
 import os
+import numpy.linalg
 from NMR_predict import GPR_NMR
 import itertools
 from multiprocessing import Pool
 import shutil
 
 
-def eval_APE_RF_hyperparams(hyperparams, paths):
+def eval_APE_RF_hyperparams(hyperparams, paths, noise_estim=True):
 
     """
     Evaluates cross-validated mean absolute error (MAE) for a given hyperparameter combination (APE-RF)
@@ -24,10 +25,24 @@ def eval_APE_RF_hyperparams(hyperparams, paths):
                     descriptor_path=descriptor_paths,
                     central_atom='Pt',
                     xyz_path=xyz_paths, xyz_base='st_',
-                    descriptor_type='APE_RF', mode='write',
+                    descriptor_type='APE-RF', mode='write',
                     target_path=target_paths)
 
-    errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=True)  # sklearn backend
+    try:
+        errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=noise_estim)  # sklearn backend
+
+        if noise_estim:
+            ls_hyperparams = list(hyperparams)
+            ls_hyperparams.append(errors_std[4])
+
+            hyperparams = tuple(ls_hyperparams)
+
+    except numpy.linalg.LinAlgError:
+        print(f'Parameter combination {hyperparams} '
+              f'produced singular kernel matrix. Proceeding iteration.')
+
+        errors_std = [float('inf')]
+        pass
 
     return hyperparams, errors_std[0]
 
@@ -41,7 +56,7 @@ def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths,
     :param rcut_grid: List of cutoff radii to iterate over
     :param dim_grid: List of feature dimensions to iterate over
     :param noise_grid: List of noise values to iterate over
-    :param kernel_grid: List of polynomial kerel degrees to iterate over
+    :param kernel_grid: List of polynomial kernel degrees to iterate over
     :param paths: List of paths
     :param n_procs: Number of parallel processes
     :param burn: Whether to keep all representation files or remove them after the optiimization
@@ -91,7 +106,7 @@ def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths,
 
     return best_params, best_mae
 
-def eval_SOAP_hyperparams(hyperparams, paths):
+def eval_SOAP_hyperparams(hyperparams, paths, noise_estim=True):
 
     """
      Evaluates cross-validated mean absolute error (MAE) for a given hyperparameter combination (SOAP)
@@ -112,7 +127,21 @@ def eval_SOAP_hyperparams(hyperparams, paths):
                     xyz_path=xyz_paths, xyz_base='st_',
                     descriptor_type='SOAP', mode='write', target_path=target_paths)
 
-    errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=True) # sklearn backend
+    try:
+        errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=noise_estim) # sklearn backend
+
+        if noise_estim:
+            ls_hyperparams = list(hyperparams)
+            ls_hyperparams.append(errors_std[4])
+
+            hyperparams = tuple(ls_hyperparams)
+
+    except numpy.linalg.LinAlgError:
+        print(f'Parameter combination {hyperparams} '
+              f'produced singular kernel matrix. Proceeding iteration.')
+
+        errors_std = [float('inf')]
+        pass
 
     return hyperparams, errors_std[0]
 

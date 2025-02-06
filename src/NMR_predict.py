@@ -15,6 +15,7 @@ from generate_descriptors import generate_descriptors
 import pickle
 
 
+
 class GPR_NMR(generate_descriptors):
     def __init__(self, descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base,
                  descriptor_type, mode, target_path):
@@ -134,7 +135,7 @@ class GPR_NMR(generate_descriptors):
                     X_data = self.get_APE_RF_partitioned()[0]
                     X_holdout = self.get_APE_RF_partitioned()[1]
                 else:
-                    X_data = self.get_APE_RF(smooth_cutoff=False)
+                    X_data = self.get_APE_RF()
 
             elif self.descriptor_type == 'SIF':
 
@@ -212,7 +213,7 @@ class GPR_NMR(generate_descriptors):
             if noise_estim:
                 estimator = GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel(noise_level=noise),
                                                      random_state=randomSeed,
-                                                     alpha=0.0, n_restarts_optimizer=1)
+                                                     alpha=0.0, n_restarts_optimizer=5, normalize_y=True)
 
             else:
                 estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed, alpha=float(noise),
@@ -224,7 +225,7 @@ class GPR_NMR(generate_descriptors):
                 estimator = GaussianProcessRegressor(
                     kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise),
                     random_state=randomSeed,
-                    alpha=0.0, n_restarts_optimizer=1)
+                    alpha=0.0, n_restarts_optimizer=5, normalize_y=True)
 
             else:
                 estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(), int(kernel_degree)),
@@ -232,12 +233,17 @@ class GPR_NMR(generate_descriptors):
                                                      optimizer=None)
 
         else:
-            estimator = GaussianProcessRegressor(kernel=RBF(), alpha=float(noise), optimizer=None)
+
+            estimator = GaussianProcessRegressor(kernel=RBF(length_scale=1.0) + WhiteKernel(noise_level=noise), alpha=0.0,
+                                                 random_state=randomSeed, n_restarts_optimizer=1, normalize_y=False)
 
         estimator.fit(X_data, target_data)
 
         if noise_estim:
             opt_noise = estimator.kernel_.k2.noise_level
+            print(f'\n Optimized noise: {opt_noise} \n')
+
+
 
         else:
             opt_noise = None
@@ -255,7 +261,11 @@ class GPR_NMR(generate_descriptors):
             directory = f'/home/alex/Pt_NMR/data/fits/{"_".join([str(param) for param in self.descriptor_params])}'
             os.makedirs(directory, exist_ok=True)
 
-            filename = f'GPR_z{kernel_degree}_a{noise}_{self.descriptor_type}.sav'
+            if noise_estim:
+                filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
+
+            else:
+                filename = f'GPR_z{kernel_degree}_a{noise}_{self.descriptor_type}.sav'
 
             pickle.dump(estimator, open(os.path.join(directory, filename), 'wb'))
 
@@ -370,11 +380,16 @@ class GPR_NMR(generate_descriptors):
         return torch.tensor(MAE_list).mean().item(), torch.tensor(MAE_list).std().item(), torch.tensor(RMSE_list).mean().item(), torch.tensor(MAE_list).std().item()
 
 
-    def GPR_test(self, kernel_degree, noise, parity_plot=False, ecp=False):
+    def GPR_test(self, kernel_degree, noise, noise_estim=False, parity_plot=False, ecp=False):
 
         # TODO: Generalize saving of regressor
         folder = f'/home/alex/Pt_NMR/data/fits/{"_".join([str(param) for param in self.descriptor_params])}'
-        filename = f'GPR_z{kernel_degree}_a{noise}_{self.descriptor_type}.sav'
+
+        if noise_estim:
+            filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
+
+        else:
+            filename = f'GPR_z{kernel_degree}_a{noise}_{self.descriptor_type}.sav'
 
         estimator = pickle.load(open(os.path.join(folder, filename), 'rb'))
 
@@ -399,7 +414,7 @@ class GPR_NMR(generate_descriptors):
 
         return test_mae, test_rmse
 
-    def GPR_test_gpytorch(self, kernel_degree, noise, parity_plot=False, ecp=False):
+    def GPR_test_gpytorch(self, kernel_degree, noise):
 
         X_data = self.load_samples()[0]
         target_data = self.load_targets(target_name='Experimental')[0]

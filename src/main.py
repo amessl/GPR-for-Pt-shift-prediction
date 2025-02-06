@@ -2,6 +2,7 @@
 
 import grid_search_CV as grid
 import argparse
+import warnings
 
 
 def main(input_file, representation):
@@ -43,14 +44,14 @@ def main(input_file, representation):
             elif section == 'paths':
                 paths.append([x.strip("'") for x in line.split()])
 
-    if representation == 'APE_RF':
+    if representation == 'APE-RF':
         grid.tune_APE_RF_hyperparams(*hyperparams, paths[0], n_procs=n_procs)
 
     elif representation == 'SOAP':
         grid.tune_SOAP_hyperparams(*hyperparams, paths[0], n_procs=n_procs)
 
     else:
-        raise ValueError(f"Invalid representation option: {representation}. Choose APE_RF or SOAP.")
+        raise ValueError(f"Invalid representation option: {representation}. Choose APE-RF or SOAP.")
 
     return hyperparams, paths, n_procs
 
@@ -64,5 +65,7 @@ if __name__ == '__main__':
     parsing.add_argument('--rep', '-r', type=str, help='Provide the name of the representation '
                                                  'you want to use (SOAP or APE_RF)', required=True)
     args = parsing.parse_args()
+
+    warnings.filterwarnings("ignore")
 
     main(args.input, args.rep)

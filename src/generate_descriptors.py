@@ -4,8 +4,6 @@ from rdkit.Chem import rdmolfiles
 from ase import Atoms
 from dscribe.descriptors import SOAP
 from get_atomic_props import AtomPropsDist
-import matplotlib.pyplot as plt
-
 
 
 class generate_descriptors:
@@ -48,7 +46,7 @@ class generate_descriptors:
         self.xyz_base = xyz_base
         self.normalize = normalize
 
-    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=False, path_index=0):
+    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=True, path_index=0):
 
         """
         Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
@@ -98,7 +96,7 @@ class generate_descriptors:
 
             x = np.linspace(0.0, self.descriptor_params[0], num=self.descriptor_params[1])
 
-            central_gaussian = (central_atom_charge - qmol) * np.exp(((-central_atom_EN * (x - 0) ** 2) / (2 * (central_atom_radius/100))))
+            central_gaussian = (central_atom_charge - qmol) * np.exp(((-central_atom_EN * (x - 0) ** 2) / ((central_atom_radius/100))))
 
             if smooth_cutoff:
                 smoothing = (1-(x / self.descriptor_params[0])**2)**3
@@ -107,7 +105,7 @@ class generate_descriptors:
 
             for i in range(0, len(EN_list)):
                 adjacent_gaussian = charge_list[i] * (
-                    np.exp(-((EN_list[i]) * (x - central_atom_distances[i]) ** 2) / (2 * atomic_radii_list[i] / 100)))
+                    np.exp(-((EN_list[i]) * (x - central_atom_distances[i]) ** 2) / (atomic_radii_list[i] / 100)))
 
                 central_gaussian += adjacent_gaussian
 
@@ -136,7 +134,7 @@ class generate_descriptors:
         partitioned_data = []
 
         for path_index in range(0, len(self.xyz_path)):
-            subset = self.get_APE_RF(format='xyz', mode='all', smooth_cutoff=False, path_index=path_index)
+            subset = self.get_APE_RF(format='xyz', mode='all', path_index=path_index)
             partitioned_data.append(subset)
 
         return partitioned_data
