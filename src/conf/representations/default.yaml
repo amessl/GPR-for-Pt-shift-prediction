@@ -1,0 +1,13 @@
+# Configuration of representations
+
+# ChEAP
+rescale_ChEAP: true
+normalize: false
+
+# GAPE
+smooth_cutoff: false
+normalize_GAPE: false
+rescale_GAPE: true
+
+# SOAP
+normalize_SOAP: true

@@ -1,0 +1,14 @@
+target:
+  original_target: ${data_root}/labels/total_set_clean_120525.csv
+  binned_target: ${data_root}/labels/total_set_clean_binned.csv
+  split_target: ${data_root}/labels/train_test_split/
+
+structures:
+  original_xyz: ${data_root}/structures/total/
+  split_xyz: ${data_root}/structures/
+
+splitting:
+  k_quantiles: 10
+  test_size: 0.2
+  randomSeed: 42
+  run_ks: true
