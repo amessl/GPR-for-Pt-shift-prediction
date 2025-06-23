@@ -1,2 +1,4 @@
- data_root: /home/alex/Pt_NMR/data
-
+data_root: /home/alex/Pt_NMR/data
+xyz_base: st_
+xyz_dir_train: ${data_root}/structures/train_split
+xyz_dir_test: ${data_root}/structures/test_split
