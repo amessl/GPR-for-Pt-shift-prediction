@@ -9,42 +9,36 @@ from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF, Wh
 from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold, learning_curve, ShuffleSplit
 from sklearn.metrics import r2_score, mean_absolute_error, root_mean_squared_error
 from sklearn.preprocessing import StandardScaler
+from base import BaseConfig
+from omegaconf import OmegaConf
+from data_loader import DataLoader
 
-from generate_descriptors import GenDescriptors
 
-
-class SklearnGPRegressor(GenDescriptors):
-    def __init__(self, descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base,
-                 descriptor_type, mode, target_path):
+class SklearnGPRegressor(BaseConfig):
+    def __init__(self, config):
         """
        Initialize class for using descriptors as input for Gaussian Process Regression
        with cross-validated errors, hyperparameter tuning and visualization of learning curves
 
        :param mode: 'read' for passing pre-generated descriptors as input
        :param descriptor_type: Options currently implemented: 'SOAP' or 'APE-RF'
-       :param descriptor_path: path where the pre-generated descriptors are stored
-       :param descriptor_params: Parameters of the descriptors (SOAP: [rcut, nmax, lmax], APE-RF: [rcut, dim])
-       :param central_atom: Atom symbol (str) of central atom ('Pt' for 195Pt-NMR)
-       :param xyz_path: Path to directory where xyz-files are stored
-       :param xyz_base: basename of the xyz_files (e.g. for st_1.xyz: 'st_')
        :param target_path: Path to target data (csv-file containing shift values)
        """
+        super().__init__(config)
 
-        super().__init__(descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base, normalize=True)
-        self.descriptor_type = descriptor_type
-        self.mode = mode
+        self.data_loader = DataLoader(config)
+        self.mode = config.mode
 
+        target_path = config.backend.model.target_path
         if isinstance(target_path, str):
             self.target_path = [target_path]
-        elif isinstance(target_path, list):
-            self.target_path = target_path
+        elif OmegaConf.is_list(target_path):
+            self.target_path = list(target_path)
         else:
             raise ValueError("Paths should be a string or a list of strings")
 
-
-    def gpr_train(self, kernel_degree, noise, lc=None, noise_estim=False, save_fit=True, stratify_train=True, ard=False):
-
-        # TODO: Refactor such that methods for loading data are in separate module
+    def gpr_train(self, kernel_degree, noise, save_fit=True, stratify_train=True,
+                  ard=False, report=None):
 
         """
         Uses the sklearn implementation of Gaussian Process Regression. Defines GPR model with linear/
@@ -54,43 +48,36 @@ class SklearnGPRegressor(GenDescriptors):
 
         :param kernel_degree: Degree of the polynomial kernel
         :param noise: Likelihood variance a. k. a. noise level of the data (is only added to K(X,X) of training points,
-        noise is added to K(X,X) of test points when using WhiteKernel(), as done if noise_estim=True
+        noise is added to K(X,X) of test points when using WhiteKernel()
         :param lc: Whether to generate and plot learning curve
-        :param noise_estim: Whether to optimize the noise level using the LML. Needed for uncertainty estimates.
         :param save_fit: Whether to save the state of the fitted model
 
         :return: CV MAE and RMSE and corresponding standard deviations
         """
 
-        X_data = self.load_samples()[0]
-        target_data = self.load_targets(target_name='Experimental')[0]
+        X_data = self.data_loader.load_samples()[0]
+        target_data = self.data_loader.load_targets(target_name='Experimental')[0]
 
 
         randomSeed = 42
 
         if kernel_degree == 1:
 
-            if noise_estim:
-                estimator = GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel(noise_level=noise),
-                                                     random_state=randomSeed,
-                                                     alpha=0.0, n_restarts_optimizer=10, normalize_y=True)
+            estimator = GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel(noise_level=noise,
+                                                                                   noise_level_bounds=(1e-4, 1e-1)),
+                                                 random_state=randomSeed,
+                                                 alpha=0.0, n_restarts_optimizer=10, normalize_y=True)
 
-            else:
-                estimator = GaussianProcessRegressor(kernel=DotProduct(), random_state=randomSeed, alpha=float(noise),
-                                                     optimizer=None)
+
 
         elif kernel_degree > 1:
 
-            if noise_estim:
-                estimator = GaussianProcessRegressor(
-                    kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise),
-                    random_state=randomSeed,
-                    alpha=0.0, n_restarts_optimizer=10, normalize_y=True)
 
-            else:
-                estimator = GaussianProcessRegressor(kernel=Exponentiation(DotProduct(sigma_0=0.0), int(kernel_degree)),
-                                                     random_state=randomSeed, alpha=float(noise),
-                                                     optimizer=None)
+            estimator = GaussianProcessRegressor(
+                kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise,
+                                                                                      noise_level_bounds=(1e-4, 1e-1)),
+                random_state=randomSeed,
+                alpha=0.0, n_restarts_optimizer=10, normalize_y=True)
 
         else:
 
@@ -107,40 +94,35 @@ class SklearnGPRegressor(GenDescriptors):
                                                      random_state=randomSeed, n_restarts_optimizer=10, normalize_y=True)
 
 
-
+        print('Training in progress....')
         estimator.fit(X_data, target_data)
 
-        if noise_estim:
-            opt_noise = estimator.kernel_.k2.noise_level
-            print(f'\n Optimized noise (on whole train set): {opt_noise}')
+        opt_noise = estimator.kernel_.k2.noise_level
+        print(f'\nOptimized noise variance: {opt_noise}')
 
-            if kernel_degree == 1:
-                opt_const = estimator.kernel_.k1.sigma_0
-            else:
-                opt_const = estimator.kernel_.k1.kernel.sigma_0
-
-            print(f'Optimized kernel bias: {opt_const}')
-
-            lml = estimator.log_marginal_likelihood_value_
-            print(f'Log marginal likelihood: {lml} \n')
-
-            if kernel_degree == 0:
-
-                opt_lengthscale = estimator.kernel_.k1.k2.length_scale
-                print(f'Optimized RBF lengthscale: {opt_lengthscale} \n')
-
+        if kernel_degree == 1:
+            opt_const = estimator.kernel_.k1.sigma_0
         else:
-            opt_noise = None
+            opt_const = estimator.kernel_.k1.kernel.sigma_0
 
+        print(f'Optimized kernel bias: {opt_const}')
+
+        lml = estimator.log_marginal_likelihood_value_
+        print(f'Log marginal likelihood: {lml} \n')
+
+        if kernel_degree == 0:
+
+            opt_lengthscale = estimator.kernel_.k1.k2.length_scale
+            print(f'Optimized RBF lengthscale: {opt_lengthscale} \n')
 
         if stratify_train:
 
-            strat_kf = StratifiedKFold(n_splits=4, random_state=randomSeed, shuffle=True)
+            strat_kf = StratifiedKFold(n_splits=4, random_state=randomSeed, shuffle=True) # TODO: n_splits in config
 
             scores_mae = []
             scores_rmse = []
 
-            bins = pd.qcut(target_data, q=10, labels=False, duplicates='drop')
+            bins = pd.qcut(target_data, q=10, labels=False, duplicates='drop') # TODO: q=10 in config
 
             X_data = pd.DataFrame(X_data)
             target_data = pd.DataFrame(target_data)
@@ -160,63 +142,116 @@ class SklearnGPRegressor(GenDescriptors):
 
         else:
 
-            cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
+            cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)  # TODO: n_splits in config
             scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv,
                                           n_jobs=1)
             scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1)
 
-        if lc:
-            self._plot_learning_curve(estimator, X_data, target_data, title='ChEAP')
 
         if save_fit:
             directory = f'/home/alex/Pt_NMR/data/fits/{"_".join([str(param) for param in self.descriptor_params])}'
             os.makedirs(directory, exist_ok=True)
 
-            if noise_estim:
-                filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
-
-            else:
-                filename = f'GPR_z{kernel_degree}_a{noise}_{self.descriptor_type}.sav'
+            filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
 
             pickle.dump(estimator, open(os.path.join(directory, filename), 'wb'))
+
+        metrics = {
+            'Training MAE': np.mean(np.abs(scores_mae)),
+            'MAE St. Dev.': np.std(np.abs(scores_mae)),
+            'Training RMSE': np.mean(np.abs(scores_rmse)),
+            'RMSE St. Dev.': np.std(np.abs(scores_rmse))
+        }
+
+        if report == 'full':
+
+            print('Generating learning curves. May take some time. Get some coffee.')
+            print("_" * 65)
+
+            self._plot_learning_curve(estimator, X_data, target_data, title=f'{self.descriptor_type}')
+
+            print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
+            print("-" * 35)
+            for key, value in metrics.items():
+                print("{:<20} {:.2f}".format(key, value))
+
+        elif report == 'errors':
+            print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
+            print("-" * 35)
+            for key, value in metrics.items():
+                print("{:<20} {:.2f}".format(key, value))
+
+        elif report is None:
+            pass
+
+        else:
+            raise Exception(f"Unsupported option '{report}' for report. "
+                            f"Specify as 'full' for printing error table "
+                            f"and displaying learning curves, 'errors' for only"
+                            f"printing error table leave at default for no report.")
+
 
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(
             np.abs(scores_rmse)), opt_noise
 
-    def gpr_test(self, kernel_degree, noise, noise_estim=False, parity_plot=False, ecp=False):
-        # TODO: Generalize saving of regressor
+    def gpr_test(self, kernel_degree, noise, report=None):
+
         folder = f'/home/alex/Pt_NMR/data/fits/{"_".join([str(param) for param in self.descriptor_params])}'
 
-        if noise_estim:
+        if os.path.isdir(folder):
+
             filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
 
+            try:
+
+                estimator = pickle.load(open(os.path.join(folder, filename), 'rb'))
+
+            except Exception:
+
+                raise Exception(f"Model with hyperparameters zeta={kernel_degree} "
+                                f"and noise={noise} has not been trained yet. \n"
+                                "Train specified model and save resulting fit before applying it on holdout set.")
+
         else:
-            filename = f'GPR_z{kernel_degree}_a{noise}_{self.descriptor_type}.sav'
+            raise Exception(f"Model with descriptor parameters {self.descriptor_params} has not been trained yet. "
+                            "Train specified model and save resulting fit before applying it on holdout set.")
 
-        estimator = pickle.load(open(os.path.join(folder, filename), 'rb'))
+        X_holdout = self.data_loader.load_samples()[1]
 
-        X_holdout = DataLoader().load_samples()[1]
-
-        target_holdout = DataLoader().load_targets()[1]
-        holdout_names = DataLoader().load_targets()[3]
+        target_holdout = self.data_loader.load_targets()[1]
+        holdout_names = self.data_loader.load_targets()[3]
 
         predictions, std = estimator.predict(X_holdout, return_std=True)
 
         test_mae = mean_absolute_error(target_holdout, predictions)
         test_rmse = root_mean_squared_error(target_holdout, predictions)
 
-        if parity_plot:
-            self._plot_correlation(predictions, target_holdout, threshold=test_rmse,
-                                   title='ChEAP', holdout_names=holdout_names,
-                                   st_devs=std, show_outliers=True)
+        metrics = {'Test MAE': test_mae,
+                   'Test RMSE': test_rmse}
 
-        if ecp:
+        if report == 'full':
+
+            correlation = self._plot_correlation(predictions, target_holdout, threshold=test_rmse,
+                                   title=f'{self.descriptor_type}', holdout_names=holdout_names)
+
             self._empirical_coverage(predictions, std, target_holdout)
 
-        print('Errors on holdout test set (Backend: sklearn): \n-----------------------------------------')
-        print(f'MAE: {test_mae} [ppm]')
-        print(f'RMSE: {test_rmse} [ppm]')
-        print('-----------------------------------------')
+            metrics = {'Test MAE': test_mae,
+                       'Test RMSE': test_rmse,
+                       '$R^{2}$': correlation}
+
+            print('\n')
+            print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
+            print("-" * 35)
+            for key, value in metrics.items():
+                print("{:<20} {:.2f}".format(key, value))
+
+        elif report == 'errors':
+            print('\n')
+            print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
+            print("-" * 35)
+            for key, value in metrics.items():
+                print("{:<20} {:.2f}".format(key, value))
 
         return test_mae, test_rmse, predictions, std
 
@@ -249,14 +284,9 @@ class SklearnGPRegressor(GenDescriptors):
 
         train_test_diff_list = []
 
-        print(train_sizes, -train_scores.mean(axis=1), -test_scores.mean(axis=1))
-
         for train_score, test_score in zip(train_scores, test_scores):
             diff = np.abs(np.mean(train_score) - np.mean(test_score))
             train_test_diff_list.append(diff)
-
-        print('Train/Test Score differences: \n -----------------------------------------')
-        print(train_test_diff_list)
 
         plt.figure()
         plt.plot(train_sizes, -train_scores.mean(axis=1), 'o-', color='r', label='Training score')
@@ -274,7 +304,7 @@ class SklearnGPRegressor(GenDescriptors):
         plt.show()
 
     @staticmethod
-    def _plot_correlation(predictions, target_holdout, threshold, title, holdout_names, st_devs, show_outliers=False):
+    def _plot_correlation(predictions, target_holdout, threshold, title, holdout_names, show_outliers=False):
 
         correlation = r2_score(target_holdout, predictions)
 
@@ -286,18 +316,6 @@ class SklearnGPRegressor(GenDescriptors):
         plt.scatter(target_holdout, predictions, edgecolors=(0, 0, 0))
         plt.plot([target_holdout.min(), target_holdout.max()], [target_holdout.min(), target_holdout.max()], 'k-',
                  lw=2)
-
-        ok_num = 0
-        for res, std in zip(residuals, st_devs):
-            if abs(res) < abs(std):
-                symb = 'O.K.'
-                ok_num += 1
-            else:
-                symb = 'PROBLEM'
-
-            print(res, ' <---->', std, symb)
-
-        print(ok_num / len(residuals))
 
         for observed, pred, res, name in outliers:
             plt.scatter(observed, pred, color='red')
@@ -325,6 +343,8 @@ class SklearnGPRegressor(GenDescriptors):
         plt.title(f'{title} ($R^2$ = {correlation:.2f})', fontsize=16)
         plt.savefig(f'/home/alex/Desktop/pp_{title}.png', dpi=300, bbox_inches='tight')
         plt.show()
+
+        return correlation
 
     @staticmethod
     def _plot_hyperparameters(estimator):
