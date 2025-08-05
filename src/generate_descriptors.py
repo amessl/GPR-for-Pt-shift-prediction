@@ -4,49 +4,22 @@ from rdkit.Chem import rdmolfiles
 from ase import Atoms
 from dscribe.descriptors import SOAP
 from get_atomic_props import AtomPropsDist
+from base import BaseConfig
 
+class GenDescriptors(BaseConfig):
 
-class generate_descriptors:
-
-    def __init__(self, descriptor_params, descriptor_path, central_atom, xyz_path, xyz_base, normalize):
+    def __init__(self, config):
 
         """
         Initialize class for generating descriptors (currently only APE_RF and SOAP are supported),
         Descriptor parameters have to be specified either for SOAP or APE_RF individually when
         creating an instance of this class. xyz_files are assumed to consist of some basename
         followed by an integer number ('xyz_base_int.xyz')
-
-        :param descriptor_params: list of descriptor parameters. SOAP: [r_cut, n_max, l_max],
-               APE-RF: [r_cut, dim]. Set of descriptor parameters is unique for each descriptor type.
-        :param descriptor_path: folder where output of descriptor generation is stored. In this folder,
-               another folder is created for each setting of the descriptor parameters.
-        :param central_atom: symbol of the central atom (for Pt-NMR: 'Pt').
-        :param xyz_path: folder where all xyz-files are stored.
-        :param xyz_base: basename of the xyz-files (e.g. for st_1.xyz: 'st_').
         """
+        super().__init__(config)
 
-        self.descriptor_params = descriptor_params
 
-        if isinstance(descriptor_path, str):
-            self.descriptor_path = [descriptor_path]
-        elif isinstance(descriptor_path, list):
-            self.descriptor_path = descriptor_path
-        else:
-            raise ValueError("Paths should be a string or a list of strings")
-
-        self.central_atom = central_atom
-
-        if isinstance(xyz_path, str):
-            self.xyz_path = [xyz_path]
-        elif isinstance(xyz_path, list):
-            self.xyz_path = xyz_path
-        else:
-            raise ValueError("Paths should be a string or a list of strings")
-
-        self.xyz_base = xyz_base
-        self.normalize = normalize
-
-    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=True, path_index=0):
+    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=False, path_index=0, normalize=False):
 
         """
         Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
@@ -56,7 +29,6 @@ class generate_descriptors:
         :param format: Whether to read structure from SMILES-file (currently not supported) or xyz_file (default)
         :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms (default)
         Order of descriptor params: [r_cut, dim]
-        :param burn: Whether to save the output of descriptor generation as .npy-file (default=True)
 
         :return:
         n x p-array of discretized APE_RF-values (APE_RF-vectors), where n is the number of samples (structures)
@@ -71,19 +43,18 @@ class generate_descriptors:
         os.makedirs(APE_RF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
-            apd = AtomPropsDist(central_atom=self.central_atom, xyz_base=self.xyz_base,
-                                  xyz_path=os.path.join(self.xyz_path[path_index], xyz_filename))
+            apd = AtomPropsDist(self.config)
 
-            qmol = apd.get_qmol()
+            qmol = apd.get_qmol(xyz_filename, path_index)
 
-            EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[0]
-            atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format)[0]
-            charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format)[0]
+            EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format, filename=xyz_filename, path_index=path_index)[0]
+            atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format, filename=xyz_filename, path_index=path_index)[0]
+            charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format,filename=xyz_filename, path_index=path_index)[0]
 
-            central_atom_distances = apd.get_adjacent_atoms_xyz()[3]
-            adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz()[6]
+            central_atom_distances = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[3]
+            adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[6]
 
-            central_atom_coord = apd.get_adjacent_atoms_xyz()[5]
+            central_atom_coord = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[5]
             central_atom_charge = apd.get_central_atom_props(target='nuclear_charge')
             central_atom_EN = apd.get_central_atom_props(target='pauling_EN')
             central_atom_radius = apd.get_central_atom_props(target='atomic_radius')
@@ -94,18 +65,17 @@ class generate_descriptors:
                 relative_position = central_atom_coord - coord
                 relative_position_vector_list.append(relative_position)
 
-            x = np.linspace(0.0, self.descriptor_params[0], num=self.descriptor_params[1])
+            x = np.linspace(0.0, self.descriptor_params['rcut'], num=self.descriptor_params['dim'])
 
-            central_gaussian = (central_atom_charge - qmol) * np.exp(((-central_atom_EN * (x - 0) ** 2) / ((central_atom_radius/100))))
+            central_gaussian = (central_atom_charge - 0.1*qmol) * np.exp((-central_atom_EN * (x - 0) ** 2) / central_atom_radius)
 
             if smooth_cutoff:
-                smoothing = (1-(x / self.descriptor_params[0])**2)**3
+                smoothing = 0.5 * (np.cos((np.pi * x) / self.descriptor_params['rcut']) + 1)
             else:
                 smoothing = 1
 
             for i in range(0, len(EN_list)):
-                adjacent_gaussian = charge_list[i] * (
-                    np.exp(-((EN_list[i]) * (x - central_atom_distances[i]) ** 2) / (atomic_radii_list[i] / 100)))
+                adjacent_gaussian = charge_list[i] * np.exp(-(EN_list[i] * (x - central_atom_distances[i]) ** 2) / atomic_radii_list[i])
 
                 central_gaussian += adjacent_gaussian
 
@@ -113,11 +83,13 @@ class generate_descriptors:
 
             central_gaussian = central_gaussian * smoothing
 
+            if normalize:
+                central_gaussian = central_gaussian / np.linalg.norm(central_gaussian)
+
             APE_RF_dataset.append(central_gaussian.flatten())
             APE_RF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}'
 
             np.save(os.path.join(APE_RF_path, APE_RF_file), central_gaussian)
-
 
         return np.array(APE_RF_dataset)
 
@@ -135,6 +107,7 @@ class generate_descriptors:
 
         for path_index in range(0, len(self.xyz_path)):
             subset = self.get_APE_RF(format='xyz', mode='all', path_index=path_index)
+
             partitioned_data.append(subset)
 
         return partitioned_data
@@ -173,7 +146,7 @@ class generate_descriptors:
 
         return species
 
-    def generate_SOAPs(self, path_index=0):
+    def generate_SOAPs(self, path_index=0, normalize=True):
 
         """
         Generate the SOAP-descriptor using the DScribe-library (Comput. Phys. Comm. 247 (2020) 106949)
@@ -193,8 +166,6 @@ class generate_descriptors:
         xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]),
                                key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        #print('Species present in dataset:', species)
-
         # Setting up SOAPs with DScribe library
         SOAP_dataset = []
 
@@ -208,7 +179,6 @@ class generate_descriptors:
             xyz_file_path = os.path.join(self.xyz_path[path_index], xyz_filename)
 
             try:
-                #mol = AllChem.MolFromXYZFile(xyz_file_path)
                 mol = rdmolfiles.MolFromXYZFile(xyz_file_path)
                 central_atom_index = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == self.central_atom]
                 atom_symbols = [atom.GetSymbol() for atom in mol.GetAtoms()]
@@ -216,25 +186,22 @@ class generate_descriptors:
 
                 atoms = Atoms(symbols=atom_symbols, positions=atom_positions)
 
-                #np.savetxt(f'/home/alex/ML/mol_conformer_{xyz_filename}.txt', atom_positions)
-
                 soap = SOAP(
                     species=species,
                     periodic=False,
-                    r_cut=float(self.descriptor_params[0]),
-                    n_max=int(self.descriptor_params[1]),
-                    l_max=int(self.descriptor_params[2])
+                    r_cut=float(self.descriptor_params['rcut']),
+                    n_max=int(self.descriptor_params['nmax']),
+                    l_max=int(self.descriptor_params['lmax'])
                 )
 
                 soap_power_spectrum = soap.create(atoms, centers=central_atom_index)
 
-                if self.normalize:
+                if normalize:
                     soap_power_spectrum = soap_power_spectrum / np.linalg.norm(soap_power_spectrum)
 
                 SOAP_dataset.append(soap_power_spectrum.flatten())
 
                 SOAP_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.npy'
-
 
                 np.save(os.path.join(SOAP_path, SOAP_file), soap_power_spectrum)
 
@@ -242,7 +209,6 @@ class generate_descriptors:
                 print(e)
 
                 pass
-
 
         return np.array(SOAP_dataset)
 
@@ -265,11 +231,9 @@ class generate_descriptors:
 
         return partitioned_data
 
-
-    def get_SIF(self, path_index=0, format='xyz', mode='neighbors'):
+    def get_SIF(self, target_list, path_index=0, format='xyz', mode='neighbors', normalize=False):
 
         SIF_dataset = []
-        mean_EN_dataset = []
 
         xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
@@ -278,24 +242,31 @@ class generate_descriptors:
         os.makedirs(SIF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
-            apd = AtomPropsDist(central_atom=self.central_atom, xyz_base=self.xyz_base,
-                                xyz_path=os.path.join(self.xyz_path[path_index], xyz_filename))
+            apd = AtomPropsDist(config=self.config)
 
-            qmol = apd.get_qmol()
-            mean_EN = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[1]
-            mean_polarizability = apd.get_atomic_properties(target='polarizability', mode=mode, format=format)[1]
-            valency = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format)[2]
+            feature_vector = []
 
+            for target in target_list:
 
-            feature_vector = [mean_EN, mean_polarizability, valency, qmol]
-            mean_EN_vector = feature_vector[0]
+                if target == 'qmol':
+                    feature_vector.append(apd.get_qmol(filename=xyz_filename, path_index=path_index))
+
+                elif target == 'valency':
+                    feature_vector.append(apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format,
+                                                                    filename=xyz_filename, path_index=path_index)[2])
+
+                else:
+                    feature_vector.append(apd.get_atomic_properties(target=target, mode=mode, format=format,
+                                                                    filename=xyz_filename, path_index=path_index)[1])
+
+            if normalize:
+                feature_vector = feature_vector / np.linalg.norm(feature_vector)
 
             SIF_dataset.append(feature_vector)
-            mean_EN_dataset.append(mean_EN_vector)
 
-        return SIF_dataset, mean_EN_dataset, xyz_filenames
+        return SIF_dataset, xyz_filenames
 
-    def get_SIF_partitioned(self):
+    def get_SIF_partitioned(self, target_list):
 
         path_lists = [self.xyz_path, self.descriptor_path]
 
@@ -308,7 +279,7 @@ class generate_descriptors:
         partitioned_data = []
 
         for path_index in range(0, len(self.xyz_path)):
-            subset = self.get_SIF(path_index, format='xyz', mode='neighbors')[0]
+            subset = self.get_SIF(target_list, path_index, format='xyz', mode='neighbors')[0]
             partitioned_data.append(subset)
 
         return partitioned_data
