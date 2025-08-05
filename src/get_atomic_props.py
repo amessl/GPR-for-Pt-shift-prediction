@@ -3,21 +3,18 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 import json
 import statistics
+from base import BaseConfig
+import os
 
 
-class AtomPropsDist:
-    def __init__(self, central_atom, xyz_path, xyz_base=None, smiles_path=None):
+class AtomPropsDist(BaseConfig):
+    def __init__(self, config, smiles_path=None):
         """
         Initialize class for getting interatomic distances, neighbors of central atom and (mean) atomic properties
 
-        :param central_atom: symbol of the central atom ('Pt')
-        :param xyz_path: path to the xyz-file
-        :param xyz_base: basename of the xyz_files (e.g. for st_1.xyz: 'st_')
         :param smiles_path: path to the smiles-file
         """
-        self.central_atom = central_atom
-        self.xyz_path = xyz_path
-        self.xyz_base = xyz_base
+        super().__init__(config)
         self.smiles_path = smiles_path
 
     def get_adjacent_atoms_smiles(self):
@@ -55,7 +52,7 @@ class AtomPropsDist:
 
         return adjacent_atoms, adjacent_atoms_indices, adjacent_atoms_symbols
 
-    def get_adjacent_atoms_xyz(self):
+    def get_adjacent_atoms_xyz(self, filename, path_index):
 
         """
         Get direct neighbor atoms of the central atom from cartesian (XYZ) atomic coordinates.
@@ -68,8 +65,9 @@ class AtomPropsDist:
         XYZ coordinates of the central atom,
         list of XYZ coordinates of the neighbor atoms
         """
+        path = os.path.join(self.xyz_path[path_index], filename)
 
-        with open(self.xyz_path, 'r') as xyz_file:
+        with open(path, 'r') as xyz_file:
             lines = xyz_file.readlines()[2:]
 
         central_atom_coords = []
@@ -100,14 +98,15 @@ class AtomPropsDist:
         xyz_neighbor_set = set()
         neighbor_distance_list = []
 
-        with open('atomic_props.json') as ap_data_file:
+
+        with open('/home/alex/Pt_NMR/src/atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         for index, symbol in enumerate(adjacent_atom_symbol_list):
             if symbol in ap_data:
                 atomic_radii_sum = ap_data[symbol]['atomic_radius'] * 1.3 + ap_data[self.central_atom][
                     'atomic_radius'] * 1.3
-                atomic_radii_sum_A = atomic_radii_sum / 100
+                atomic_radii_sum_A = atomic_radii_sum
 
             if atomic_radii_sum_A > distance_list[index]:
                 xyz_neighbor_list.append(adjacent_atom_symbol_list[index])
@@ -169,7 +168,7 @@ class AtomPropsDist:
 
         return mean_distance, distances
 
-    def get_qmol(self):
+    def get_qmol(self, filename, path_index):
 
         """
         Obtain the molecular charge (qmol) from the xyz-file.
@@ -179,13 +178,13 @@ class AtomPropsDist:
         :return:
         Integer value of molecular charge (qmol)
         """
-
-        with open(self.xyz_path, 'r') as xyz_file:
+        path = os.path.join(self.xyz_path[path_index], filename)
+        with open(path, 'r') as xyz_file:
             qmol_line = xyz_file.readlines()[1]
             qmol = qmol_line.strip()
 
         try:
-            int_qmol = int(qmol)
+            int_qmol = int(round(float(qmol)))
 
         except ValueError:
             raise ValueError("Molecular charge not found in xyz-file. \n"
@@ -207,7 +206,7 @@ class AtomPropsDist:
                  'nuclear_charge', 'ionization_potential',
                  'electron_affinity', 'polarizability', 'vdw_radius']
 
-        with open('atomic_props.json') as ap_data_file:
+        with open('/home/alex/Pt_NMR/src/atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         atom_symbol = self.central_atom
@@ -224,11 +223,11 @@ class AtomPropsDist:
 
         return atomic_property
 
-    def get_atomic_properties(self, format, target, mode):
+    def get_atomic_properties(self, format, target, mode, filename, path_index):
 
         """
         Get atomic properties of the neighbor atoms of the central atom for a molecule.
-        The atomic propeties are stored in the JSON file 'atomic_properties.json'
+        The atomic properties are stored in the JSON file 'atomic_props.json'
 
         :param format: Whether to use xyz- or SMILES-files to read the structure
                        (Specify as 'xyz' or 'smiles')
@@ -249,19 +248,22 @@ class AtomPropsDist:
                  'nuclear_charge', 'ionization_potential',
                  'electron_affinity', 'polarizability', 'vdw_radius']
 
-        with open('atomic_props.json') as ap_data_file:
+        with open('/home/alex/Pt_NMR/src/atomic_props.json') as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         if format == 'xyz' and self.xyz_path is not None:
 
             if mode == 'neighbors':
-                adjacent_atoms_list = self.get_adjacent_atoms_xyz()[0]
+                adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[0]
 
             elif mode == 'all':
-                adjacent_atoms_list = self.get_adjacent_atoms_xyz()[4]
+                adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[4]
 
         elif format == 'smiles' and self.smiles_path is not None:
             adjacent_atoms_list = self.get_adjacent_atoms_smiles()[2]
+
+        else:
+            raise ValueError("Specify 'format' as either 'xyz' or 'smiles'")
 
         prop_list = []
 
@@ -339,7 +341,7 @@ class AtomPropsDist:
             mean_prop = statistics.mean(prop_list)
 
         else:
-            raise ValueError(f"Target property is not supported. Supported properties: \n {props}")
+            raise ValueError(f"Target property '{target}' is not supported. Supported properties: \n {props}")
 
         valency = len(prop_list)
 
