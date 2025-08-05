@@ -1,208 +1,100 @@
 import os
+import numpy as np
 import numpy.linalg
-from NMR_predict import GPR_NMR
+from predict_sklearn import SklearnGPRegressor
 import itertools
-from multiprocessing import Pool
-import shutil
+import hydra
+from omegaconf import DictConfig, OmegaConf
+import mlflow
+import subprocess
+import webbrowser
+import time
 
 
-def eval_APE_RF_hyperparams(hyperparams, paths, noise_estim=True):
+@hydra.main(config_path="../conf", config_name="config", version_base="1.1")
+def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True):
 
-    """
-    Evaluates cross-validated mean absolute error (MAE) for a given hyperparameter combination (APE-RF)
+    gp_grid = OmegaConf.to_container(cfg.grid_search.GP_grid, resolve=True)
 
-    :param hyperparams: List of hyperparameters
-    :param paths: List of paths to representations, structures (xyz-files) and target data
-    :return: List of hyperparameters and corresponding MAE
-    """
+    if cfg.representations.rep == 'SOAP':
+        param_grid = OmegaConf.to_container(cfg.grid_search.SOAP_grid, resolve=True)
+        param_names = list(cfg.grid_search.SOAP_grid.keys())
 
-    rcut, dim, noise, kernel_degree = hyperparams
-    descriptor_paths = paths[:2]
-    xyz_paths = paths[2:4]
-    target_paths = paths[4:6]
+    elif cfg.representations.rep == 'GAPE':
+        param_grid = OmegaConf.to_container(cfg.grid_search.GAPE_grid, resolve=True)
+        print('Param Grid GAPE:', param_grid)
+        param_names = list(cfg.grid_search.GAPE_grid.keys())
 
-    model = GPR_NMR(descriptor_params=[rcut, dim],
-                    descriptor_path=descriptor_paths,
-                    central_atom='Pt',
-                    xyz_path=xyz_paths, xyz_base='st_',
-                    descriptor_type='APE-RF', mode='write',
-                    target_path=target_paths)
+    else:
+        raise ValueError(f"Representation {cfg.representations.rep} not supported. Use 'GAPE' or 'SOAP'.")
 
-    try:
-        errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=noise_estim)  # sklearn backend
+    combined_grid = {**gp_grid, **param_grid}
+    param_names = list(gp_grid.keys()) + param_names
 
-        if noise_estim:
-            ls_hyperparams = list(hyperparams)
-            ls_hyperparams.append(errors_std[4])
+    grid = list(itertools.product(*combined_grid.values()))
 
-            hyperparams = tuple(ls_hyperparams)
+    for iteration, hyperparams in enumerate(grid, 1):
+        hyperparams_dict = dict(zip(param_names, hyperparams))
 
-    except numpy.linalg.LinAlgError:
-        print(f'Parameter combination {hyperparams} '
-              f'produced singular kernel matrix. Proceeding iteration.')
+        # Clone cfg so we don't overwrite in-place
+        updated_cfg = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
 
-        errors_std = [float('inf')]
-        pass
+        # Update GP hyperparams
+        for key in gp_grid.keys():
+            if key in hyperparams_dict:
+                updated_cfg.backend.training[key] = hyperparams_dict[key]
 
-    return hyperparams, errors_std[0]
+        # Update representation-specific hyperparams
+        if cfg.representations.rep == 'SOAP':
+            for key in param_grid.keys():
+                updated_cfg.representations.SOAP_params[key] = hyperparams_dict[key]
 
+        elif cfg.representations.rep == 'GAPE':
+            for key in param_grid.keys():
+                updated_cfg.representations.GAPE_params[key] = hyperparams_dict[key]
 
-def tune_APE_RF_hyperparams(rcut_grid, dim_grid, noise_grid, kernel_grid, paths, n_procs, burn=False):
+        print('-' * 35)
+        print(f'\nIteration {iteration}/{len(grid)}:')
+        print('-' * 35)
+        print(f'Hyperparameters: {hyperparams}')
+        print(f'{hyperparams_dict}')
 
-    """
-    Parallel exhaustive grid search iterating over all hyperparameter combinations specified
-    by the corresponding grids to find the combination yielding the minimal MAE (for APE-RF)
+        eval_param_comb(hyperparams_dict, updated_cfg)
 
-    :param rcut_grid: List of cutoff radii to iterate over
-    :param dim_grid: List of feature dimensions to iterate over
-    :param noise_grid: List of noise values to iterate over
-    :param kernel_grid: List of polynomial kernel degrees to iterate over
-    :param paths: List of paths
-    :param n_procs: Number of parallel processes
-    :param burn: Whether to keep all representation files or remove them after the optiimization
-    :return: Parameter combination yielding the minimal MAE and the MAE
-    """
+    if mlflow_ui:
 
-    param_grid = {
-        'rcut': rcut_grid,
-        'dim': dim_grid,
-        'noise': noise_grid,
-        'degree': kernel_grid
-    }
-    param_combinations = list(itertools.product(*param_grid.values()))
-    print(f'Number of parameter combinations: {len(param_combinations)}')
+        mlflow_URI = mlflow.get_tracking_uri()[7:]
+        print(mlflow_URI)
+        subprocess.Popen(["mlflow", "ui", "--backend-store-uri", mlflow_URI])
 
-    min_diff = 1e-2
-    best_mae = float('inf')
-    best_params = None
-    top_candidates = []
+        time.sleep(2)
+        webbrowser.open("http://127.0.0.1:5000")
 
-    with Pool(processes=n_procs) as pool:
-        results = pool.starmap(eval_APE_RF_hyperparams, [(params, paths) for params in param_combinations])
+def eval_param_comb(hyperparams_dict: dict, cfg: DictConfig):
 
-    for params, mae in results:
-        print('Errors of hyperparameter combination:', params, mae)
+    # TODO: Update the hyperparams in the config (otherwise you train same model over and over again in grid search)
 
-        if mae < best_mae:
-            best_mae = mae
-            best_params = dict(zip(param_grid.keys(), params))
-            top_candidates = [best_params]
+    print("MLflow tracking URI:", mlflow.get_tracking_uri()[7:])
 
-        elif abs(mae - best_mae) <= min_diff:
-            top_candidates.append(dict(zip(param_grid.keys(), params)))
+    with mlflow.start_run():
+        mlflow.log_params(hyperparams_dict)
 
-    print(f"Optimized hyperparameters: {best_params}")
-    print(f"Lowest cross-validated MAE: {best_mae}")
-    print("Other top hyperparameter combinations within MAE tolerance:", top_candidates)
+        model = SklearnGPRegressor(config=cfg)
 
-    if burn:
-        for params_list in param_combinations:
-            for path in paths[:2]:
-                descriptor_folder = os.path.join(path, f'{str(params_list[0])}_{str(params_list[1])}')
-                if os.path.exists(descriptor_folder):
-                    shutil.rmtree(descriptor_folder)
-                else:
-                    pass
+        try:
+            train_MAE = model.gpr_train(**cfg.backend.training)[0]
+            mlflow.log_metric("train_mae", train_MAE)
 
-    return best_params, best_mae
+        except np.linalg.LinAlgError:
+            print(f"Combination {hyperparams_dict} produced singular kernel matrix.")
+            mlflow.log_metric("train_mae", float("inf"))
 
-def eval_SOAP_hyperparams(hyperparams, paths, noise_estim=True):
+        except Exception as e:
+            print(f"Run failed for {hyperparams_dict}: {e}")
+            mlflow.log_metric("train_mae", float("nan"))
 
-    """
-     Evaluates cross-validated mean absolute error (MAE) for a given hyperparameter combination (SOAP)
+        finally:
+            print(f"Logged run for: {hyperparams_dict}")
 
-     :param hyperparams: List of hyperparameters
-     :param paths: List of paths to representations, structures (xyz-files) and target data
-     :return: List of hyperparameters and corresponding MAE
-     """
-
-    rcut, nmax, lmax, noise, kernel_degree = hyperparams
-    descriptor_paths = paths[:2]
-    xyz_paths = paths[2:4]
-    target_paths = paths[4:6]
-
-    model = GPR_NMR(descriptor_params=[rcut, nmax, lmax],
-                    descriptor_path=descriptor_paths,
-                    central_atom='Pt',
-                    xyz_path=xyz_paths, xyz_base='st_',
-                    descriptor_type='SOAP', mode='write', target_path=target_paths)
-
-    try:
-        errors_std = model.GPR_train(kernel_degree=kernel_degree, noise=noise, noise_estim=noise_estim) # sklearn backend
-
-        if noise_estim:
-            ls_hyperparams = list(hyperparams)
-            ls_hyperparams.append(errors_std[4])
-
-            hyperparams = tuple(ls_hyperparams)
-
-    except numpy.linalg.LinAlgError:
-        print(f'Parameter combination {hyperparams} '
-              f'produced singular kernel matrix. Proceeding iteration.')
-
-        errors_std = [float('inf')]
-        pass
-
-    return hyperparams, errors_std[0]
-
-def tune_SOAP_hyperparams(rcut_grid, nmax_grid, lmax_grid, noise_grid, kernel_grid, paths, n_procs, burn=True):
-
-    """
-        Parallel exhaustive grid search iterating over all hyperparameter combinations specified
-        by the corresponding grids to find the combination yielding the minimal MAE (for SOAP)
-
-        :param rcut_grid: List of cutoff radii to iterate over
-        :param nmax_grid: List of max number of radial basis functions to iterate over
-        :param lmax_grid: List of maximum degree of spherical harmonics to iterate over
-        :param kernel_grid: List of polynomial kernel degrees to iterate over
-        :param paths: List of paths
-        :param n_procs: Number of parallel processes
-        :param burn: Whether to keep all representation files or remove them after the optiimization
-        :return: Parameter combination yielding the minimal MAE and the MAE
-        """
-
-    param_grid = {
-        'rcut': rcut_grid,
-        'nmax': nmax_grid,
-        'lmax': lmax_grid,
-        'noise': noise_grid,
-        'degree': kernel_grid
-    }
-    param_combinations = list(itertools.product(*param_grid.values()))
-    print(f'Number of parameter combinations: {len(param_combinations)}')
-
-    min_diff = 1e-2
-    best_mae = float('inf')
-    best_params = None
-    top_candidates = []
-
-    with Pool(processes=n_procs) as pool:
-        results = pool.starmap(eval_SOAP_hyperparams, [(params, paths) for params in param_combinations])
-
-    for params, mae in results:
-        print('Errors of hyperparameter combination:', params, mae) # TODO: iterate total MAE list for lowest and top candidates
-
-        if mae < best_mae:
-            best_mae = mae
-            best_params = dict(zip(param_grid.keys(), params))
-            top_candidates = [best_params]
-        elif abs(mae - best_mae) <= min_diff:
-            top_candidates.append(dict(zip(param_grid.keys(), params)))
-
-    print(f"Optimized hyperparameters: {best_params}")
-    print(f"Lowest cross-validated MAE: {best_mae}")
-    print("Other top hyperparameter combinations within MAE tolerance:", top_candidates)
-
-    if burn:
-        for params_list in param_combinations:
-            for path in paths[:2]:
-                descriptor_folder = os.path.join(path, f'{str(params_list[0])}_{str(params_list[1])}_{str(params_list[2])}')
-                if os.path.exists(descriptor_folder):
-                    shutil.rmtree(descriptor_folder)
-                else:
-                    pass
-
-        print('Representation files removed. To keep them set burn=False')
-
-    return best_params, best_mae
-
+if __name__ == "__main__":
+    hydra.main(config_path="../conf", config_name="config", version_base="1.1")(eval_model_grid)()

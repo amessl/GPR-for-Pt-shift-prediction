@@ -1,0 +1,15 @@
+defaults:
+  - _self_
+  - representations: default
+  - splitting: default
+  - backend: sklearn
+
+data_root: /home/alex/Pt_NMR/data
+xyz_base: st_
+xyz_dir:
+  - ${data_root}/structures/train_split
+  - ${data_root}/structures/test_split
+central_atom: Pt
+mode: write
+
+experiment_name: example

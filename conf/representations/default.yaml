@@ -1,0 +1,37 @@
+#Configuration of representations
+
+rep: null # Type of reprsentation is None per default and
+          # needs to be specified att runtime or when instantiating model
+
+# ChEAP
+ChEAP_paths: 
+  - ${data_root}/representations/SIF/train/
+  - ${data_root}/representations/SIF/test/
+
+rescale_ChEAP: true
+normalize_ChEAP: false
+
+# GAPE
+GAPE_paths:
+  - ${data_root}/representations/APE_RF/train/
+  - ${data_root}/representations/APE_RF/test/
+
+GAPE_params:
+  - r_cut: 3.0 # cutoff
+  - dim: 500 # dimensionality
+
+smooth_cutoff: false
+normalize_GAPE: false
+rescale_GAPE: true
+
+# SOAP
+SOAP_paths:
+  - ${data_root}/representations/SOAP/train/
+  - ${data_root}/representations/SOAP/test/
+
+SOAP_params:
+  - r_cut: 2.0 #cutoff
+  - n_max: 3
+  - l_max: 5
+
+normalize_SOAP: true

@@ -1,7 +1,0 @@
-defaults:
-  - _self_
-  - base
-  - representations: default
-  - splitting: default
-
-experiment_name: example
