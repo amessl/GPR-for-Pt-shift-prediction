@@ -131,16 +131,16 @@ def test_target_dist(train_targets, test_targets):
 
     return ks_stat, p_value
 
-@hydra.main(config_path="conf", config_name="config", version_base="1.1")
+@hydra.main(config_path="../conf", config_name="config", version_base="1.1")
 def main(cfg: DictConfig):
     """
-   Main entry point for performing stratified splitting and optional distribution testing.
+    Main entry point for performing stratified splitting and optional distribution testing.
 
-   This function loads configuration via Hydra, performs a stratified train/test split
-   on a labeled dataset of molecules and associated structure files, and optionally runs
-   a Kolmogorov-Smirnov test to compare label distributions.
+    This function loads configuration via Hydra, performs a stratified train/test split
+    on a labeled dataset of molecules and associated structure files, and optionally runs
+    a Kolmogorov-Smirnov test to compare label distributions.
 
-   Args:
+    Args:
        cfg (DictConfig): Hydra configuration object containing all required paths and parameters:
            - splitting.target.original_target (str): Path to original label CSV.
            - splitting.structures.original_xyz (str): Directory containing original .xyz files.
