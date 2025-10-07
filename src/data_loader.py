@@ -54,20 +54,18 @@ class DataLoader(BaseConfig):
 
         for filename in descriptor_filenames:
 
-            try:
-                descriptor_file = os.path.join(descriptor_path, filename)
-                descriptor_array = np.load(descriptor_file, allow_pickle=True)
-                descriptor_array = descriptor_array.flatten()
+            descriptor_file = os.path.join(descriptor_path, filename)
 
-                dataset.append(descriptor_array)
-                memory += os.path.getsize(descriptor_file)
+            if os.path.getsize(descriptor_file) == 0:
+                raise ValueError(f"Descriptor file {descriptor_file} is empty.")
 
-                file_count += 1
+            descriptor_array = np.load(descriptor_file, allow_pickle=True)
+            descriptor_array = descriptor_array.flatten()
 
-            except os.path.getsize(descriptor_file) == 0:
-                raise Warning(f'File No. {file_count} is empty.')
+            dataset.append(descriptor_array)
+            memory += os.path.getsize(descriptor_file)
 
-                pass
+            file_count += 1
 
         if self.config.normalize:
             dataset = Normalizer(norm='l2').fit_transform(dataset)
@@ -100,27 +98,24 @@ class DataLoader(BaseConfig):
                 X_data.append(self.read_descriptors(path_index))
 
             if partitioned:
-                X_data = X_data[0]
-                X_holdout = X_data[1]
-
+                X_train, X_holdout = X_data
             else:
-                X_data = X_data  # total dataset
+                X_data = np.vstack(X_data) if len(X_data) > 1 else X_data[0]
+
 
         elif self.mode == 'write':
 
             if self.descriptor_type == 'SOAP':
 
                 if partitioned:
-                    X_data = gen.generate_SOAPs_partitioned()[0]
-                    X_holdout = gen.generate_SOAPs_partitioned()[1]
+                    X_data, X_holdout = gen.generate_SOAPs_partitioned()
                 else:
                     X_data = gen.generate_SOAPs()
 
             elif self.descriptor_type == 'GAPE':
 
                 if partitioned:
-                    X_data = gen.get_APE_RF_partitioned()[0]
-                    X_holdout = gen.get_APE_RF_partitioned()[1]
+                    X_data, X_holdout = gen.get_APE_RF_partitioned()
 
                 else:
                     X_data = gen.get_APE_RF()
@@ -128,11 +123,10 @@ class DataLoader(BaseConfig):
             elif self.descriptor_type == 'ChEAP':
 
                 if partitioned:
-                    X_data = gen.get_SIF_partitioned(target_list=self.descriptor_params)[0]
-                    X_holdout = gen.get_SIF_partitioned(target_list=self.descriptor_params)[1]
+                    X_data, X_holdout = gen.get_SIF_partitioned(target_list=self.descriptor_params)
 
                 else:
-                    X_data = gen.get_SIF(target_list=self.descriptor_params)
+                    X_data = gen.get_SIF(target_list=self.descriptor_params, path_index=2)
 
             else:
                 raise Exception('Descriptor type has to be specified. Use "SOAP" or "GAPE"')
@@ -151,6 +145,7 @@ class DataLoader(BaseConfig):
         :param partitioned: Whether to load train and test samples separately (Default=True)
         :return: Total number of targets or training and test targets
         """
+        target_holdout_compound_names = None
 
         if partitioned:
 
@@ -174,7 +169,7 @@ class DataLoader(BaseConfig):
                 target_holdout_compound_names = None
 
         else:
-            indexed_target_data = pd.read_csv(f'{self.target_path[0]}')
+            indexed_target_data = pd.read_csv(f'{self.target_path[2]}')
             sorted_train = indexed_target_data.sort_values(by='Index')
 
             target_data = sorted_train[str(target_name)]

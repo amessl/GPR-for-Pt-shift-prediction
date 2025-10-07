@@ -259,12 +259,16 @@ class GenDescriptors(BaseConfig):
                     feature_vector.append(apd.get_atomic_properties(target=target, mode=mode, format=format,
                                                                     filename=xyz_filename, path_index=path_index)[1])
 
+            SIF_vec = np.array(feature_vector, dtype=float)
+
             if normalize:
-                feature_vector = feature_vector / np.linalg.norm(feature_vector)
+                nrm = np.linalg.norm(SIF_vec)
+                if nrm > 0:
+                    SIF_vec = SIF_vec / nrm
 
-            SIF_dataset.append(feature_vector)
+            SIF_dataset.append(SIF_vec.tolist())
 
-        return SIF_dataset, xyz_filenames
+        return SIF_dataset
 
     def get_SIF_partitioned(self, target_list):
 
@@ -279,7 +283,8 @@ class GenDescriptors(BaseConfig):
         partitioned_data = []
 
         for path_index in range(0, len(self.xyz_path)):
-            subset = self.get_SIF(target_list, path_index, format='xyz', mode='neighbors')[0]
+            subset = self.get_SIF(target_list, path_index, format='xyz', mode='neighbors')  # Here was a [0] 26.08. 23:16 ?
             partitioned_data.append(subset)
+
 
         return partitioned_data

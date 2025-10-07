@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import pickle
@@ -13,6 +14,7 @@ from base import BaseConfig
 from omegaconf import OmegaConf
 from data_loader import DataLoader
 
+matplotlib.use("TkAgg")
 
 class SklearnGPRegressor(BaseConfig):
     def __init__(self, config):
@@ -20,9 +22,6 @@ class SklearnGPRegressor(BaseConfig):
        Initialize class for using descriptors as input for Gaussian Process Regression
        with cross-validated errors, hyperparameter tuning and visualization of learning curves
 
-       :param mode: 'read' for passing pre-generated descriptors as input
-       :param descriptor_type: Options currently implemented: 'SOAP' or 'APE-RF'
-       :param target_path: Path to target data (csv-file containing shift values)
        """
         super().__init__(config)
 
@@ -37,6 +36,7 @@ class SklearnGPRegressor(BaseConfig):
         else:
             raise ValueError("Paths should be a string or a list of strings")
 
+        self.fit_path = config.backend.model.fit_path
     def gpr_train(self, kernel_degree, noise, save_fit=True, stratify_train=True,
                   ard=False, report=None):
 
@@ -58,26 +58,20 @@ class SklearnGPRegressor(BaseConfig):
         X_data = self.data_loader.load_samples()[0]
         target_data = self.data_loader.load_targets(target_name='Experimental')[0]
 
-
         randomSeed = 42
 
         if kernel_degree == 1:
 
-            estimator = GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel(noise_level=noise,
-                                                                                   noise_level_bounds=(1e-4, 1e-1)),
+            estimator = GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel(noise_level=noise),
                                                  random_state=randomSeed,
                                                  alpha=0.0, n_restarts_optimizer=10, normalize_y=True)
 
-
-
         elif kernel_degree > 1:
 
-
             estimator = GaussianProcessRegressor(
-                kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise,
-                                                                                      noise_level_bounds=(1e-4, 1e-1)),
+                kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise),
                 random_state=randomSeed,
-                alpha=0.0, n_restarts_optimizer=10, normalize_y=True)
+                alpha=0.0, n_restarts_optimizer=10, normalize_y=True)  # always normalize labels !!
 
         else:
 
@@ -93,8 +87,10 @@ class SklearnGPRegressor(BaseConfig):
                 estimator = GaussianProcessRegressor(kernel=ard_kernel, alpha=0.0,
                                                      random_state=randomSeed, n_restarts_optimizer=10, normalize_y=True)
 
-
+        # TODO: Check vals of noise (normalize_y)
         print('Training in progress....')
+        print(f'Init noise: {noise}')
+
         estimator.fit(X_data, target_data)
 
         opt_noise = estimator.kernel_.k2.noise_level
@@ -117,12 +113,12 @@ class SklearnGPRegressor(BaseConfig):
 
         if stratify_train:
 
-            strat_kf = StratifiedKFold(n_splits=4, random_state=randomSeed, shuffle=True) # TODO: n_splits in config
+            strat_kf = StratifiedKFold(n_splits=4, random_state=randomSeed, shuffle=True)
 
             scores_mae = []
             scores_rmse = []
 
-            bins = pd.qcut(target_data, q=10, labels=False, duplicates='drop') # TODO: q=10 in config
+            bins = pd.qcut(target_data, q=10, labels=False, duplicates='drop')
 
             X_data = pd.DataFrame(X_data)
             target_data = pd.DataFrame(target_data)
@@ -147,14 +143,15 @@ class SklearnGPRegressor(BaseConfig):
                                           n_jobs=1)
             scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1)
 
-
         if save_fit:
-            directory = f'/home/alex/Pt_NMR/data/fits/{"_".join([str(param) for param in self.descriptor_params])}'
+            directory = f'{self.fit_path}{"_".join([str(param) for param in self.descriptor_params])}'
             os.makedirs(directory, exist_ok=True)
 
             filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
 
             pickle.dump(estimator, open(os.path.join(directory, filename), 'wb'))
+            print(f'Fit saved to {directory}.')
+            print(f'Fit path: {self.fit_path}')
 
         metrics = {
             'Training MAE': np.mean(np.abs(scores_mae)),
@@ -165,7 +162,7 @@ class SklearnGPRegressor(BaseConfig):
 
         if report == 'full':
 
-            print('Generating learning curves. May take some time. Get some coffee.')
+            print('Generating learning curves. May take some time.')
             print("_" * 65)
 
             self._plot_learning_curve(estimator, X_data, target_data, title=f'{self.descriptor_type}')
@@ -173,13 +170,13 @@ class SklearnGPRegressor(BaseConfig):
             print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
             print("-" * 35)
             for key, value in metrics.items():
-                print("{:<20} {:.2f}".format(key, value))
+                print("{:<20} {:.0f}".format(key, value))
 
         elif report == 'errors':
             print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
             print("-" * 35)
             for key, value in metrics.items():
-                print("{:<20} {:.2f}".format(key, value))
+                print("{:<20} {:.0f}".format(key, value))
 
         elif report is None:
             pass
@@ -196,7 +193,7 @@ class SklearnGPRegressor(BaseConfig):
 
     def gpr_test(self, kernel_degree, noise, report=None):
 
-        folder = f'/home/alex/Pt_NMR/data/fits/{"_".join([str(param) for param in self.descriptor_params])}'
+        folder = f'{self.fit_path}{"_".join([str(param) for param in self.descriptor_params])}'
 
         if os.path.isdir(folder):
 
@@ -229,10 +226,18 @@ class SklearnGPRegressor(BaseConfig):
         metrics = {'Test MAE': test_mae,
                    'Test RMSE': test_rmse}
 
+        residuals = [observed - pred for pred, observed in zip(predictions, target_holdout)]
+
         if report == 'full':
 
             correlation = self._plot_correlation(predictions, target_holdout, threshold=test_rmse,
                                    title=f'{self.descriptor_type}', holdout_names=holdout_names)
+
+            print('-'*35)
+            print(f'Correlation: {correlation}')
+            print(f'Uncertainties: {std}')
+            print(f'Average Uncertainties: {np.mean(std)}')
+            print('-' * 35)
 
             self._empirical_coverage(predictions, std, target_holdout)
 
@@ -244,16 +249,16 @@ class SklearnGPRegressor(BaseConfig):
             print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
             print("-" * 35)
             for key, value in metrics.items():
-                print("{:<20} {:.2f}".format(key, value))
+                print("{:<20} {:.0f}".format(key, value))
 
         elif report == 'errors':
             print('\n')
             print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
             print("-" * 35)
             for key, value in metrics.items():
-                print("{:<20} {:.2f}".format(key, value))
+                print("{:<20} {:.0f}".format(key, value))
 
-        return test_mae, test_rmse, predictions, std
+        return test_mae, test_rmse, predictions, std, residuals, holdout_names
 
     @staticmethod
     def _empirical_coverage(predictions, st_devs, target_holdout, z_score=1.96):
@@ -290,25 +295,27 @@ class SklearnGPRegressor(BaseConfig):
 
         plt.figure()
         plt.plot(train_sizes, -train_scores.mean(axis=1), 'o-', color='r', label='Training score')
-        plt.plot(train_sizes, -test_scores.mean(axis=1), 's-', color='g', label='Test score')
+        plt.plot(train_sizes, -test_scores.mean(axis=1), 's-', color='g', label='Validation score')
         plt.fill_between(x=train_sizes, y1=-train_scores.mean(axis=1) - train_scores.std(axis=1),
                          y2=-train_scores.mean(axis=1) + train_scores.std(axis=1), color='r', alpha=0.3)
         plt.fill_between(x=train_sizes, y1=-test_scores.mean(axis=1) - test_scores.std(axis=1),
                          y2=-test_scores.mean(axis=1) + test_scores.std(axis=1), color='g', alpha=0.3)
-        plt.xlabel('Number of training points', fontsize=12)
-        plt.ylabel('MAE (ppm)', fontsize=12)
-        plt.legend(loc='best')
+        plt.xlabel('Number of training points', fontsize=16)
+        plt.ylabel('MAE (ppm)', fontsize=16)
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.legend(loc='best', fontsize=14)
         plt.title(title, fontsize=18)
         plt.grid()
-        plt.savefig(f'/home/alex/Desktop/lc_{title}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(f'/home/alex/Pt_NMR/paper/figs/lc_{title}.png', dpi=400, bbox_inches='tight')
         plt.show()
 
     @staticmethod
-    def _plot_correlation(predictions, target_holdout, threshold, title, holdout_names, show_outliers=False):
+    def _plot_correlation(predictions, target_holdout, threshold, title, holdout_names, show_outliers=True):
 
         correlation = r2_score(target_holdout, predictions)
 
-        residuals = [abs(pred) - abs(observed) for pred, observed in zip(predictions, target_holdout)]
+        residuals = [observed-pred for pred, observed in zip(predictions, target_holdout)]
 
         outliers = [(observed, pred, res, name) for observed, pred, res, name in zip(target_holdout, predictions, residuals, holdout_names) if
                     abs(res) > threshold]
@@ -338,10 +345,12 @@ class SklearnGPRegressor(BaseConfig):
             print('Residuals:')
             print(residuals)
 
-        plt.xlabel('Measured (ppm)', fontsize=12)
-        plt.ylabel('Predicted (ppm)', fontsize=12)
-        plt.title(f'{title} ($R^2$ = {correlation:.2f})', fontsize=16)
-        plt.savefig(f'/home/alex/Desktop/pp_{title}.png', dpi=300, bbox_inches='tight')
+        plt.xlabel('Measured (ppm)', fontsize=16)
+        plt.ylabel('Predicted (ppm)', fontsize=16)
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.title(f'{title} ($R^2$ = {correlation:.2f})', fontsize=18)
+        plt.savefig(f'/home/alex/Pt_NMR/paper/figs/pp_{title}.png', dpi=400, bbox_inches='tight')
         plt.show()
 
         return correlation

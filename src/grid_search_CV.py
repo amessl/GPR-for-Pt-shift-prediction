@@ -9,10 +9,17 @@ import mlflow
 import subprocess
 import webbrowser
 import time
+from multiprocessing import Pool
+
+
+def worker(args):
+    hyperparams_dict, cfg_dict = args
+    cfg = OmegaConf.create(cfg_dict)
+    eval_param_comb(hyperparams_dict, cfg)
 
 
 @hydra.main(config_path="../conf", config_name="config", version_base="1.1")
-def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True):
+def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = True):
 
     gp_grid = OmegaConf.to_container(cfg.grid_search.GP_grid, resolve=True)
 
@@ -33,48 +40,76 @@ def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True):
 
     grid = list(itertools.product(*combined_grid.values()))
 
-    for iteration, hyperparams in enumerate(grid, 1):
-        hyperparams_dict = dict(zip(param_names, hyperparams))
+    mlflow.set_tracking_uri('/home/alex/Pt_NMR/mlruns')
 
-        # Clone cfg so we don't overwrite in-place
-        updated_cfg = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
+    if parallel:
+        tasks = []
 
-        # Update GP hyperparams
-        for key in gp_grid.keys():
-            if key in hyperparams_dict:
-                updated_cfg.backend.training[key] = hyperparams_dict[key]
+        for hyperparams in grid:
+            hyperparams_dict = dict(zip(param_names, hyperparams))
+            updated_cfg = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
 
-        # Update representation-specific hyperparams
-        if cfg.representations.rep == 'SOAP':
-            for key in param_grid.keys():
-                updated_cfg.representations.SOAP_params[key] = hyperparams_dict[key]
+            for key in gp_grid.keys():
+                if key in hyperparams_dict:
+                    updated_cfg.backend.training[key] = hyperparams_dict[key]
+            if cfg.representations.rep == 'SOAP':
+                for key in param_grid.keys():
+                    updated_cfg.representations.SOAP_params[key] = hyperparams_dict[key]
+            elif cfg.representations.rep == 'GAPE':
+                for key in param_grid.keys():
+                    updated_cfg.representations.GAPE_params[key] = hyperparams_dict[key]
 
-        elif cfg.representations.rep == 'GAPE':
-            for key in param_grid.keys():
-                updated_cfg.representations.GAPE_params[key] = hyperparams_dict[key]
+            # Store config as dict
+            tasks.append((hyperparams_dict, OmegaConf.to_container(updated_cfg, resolve=True)))
 
-        print('-' * 35)
-        print(f'\nIteration {iteration}/{len(grid)}:')
-        print('-' * 35)
-        print(f'Hyperparameters: {hyperparams}')
-        print(f'{hyperparams_dict}')
+        with Pool(processes=4) as pool:
+            pool.map(worker, tasks)
 
-        eval_param_comb(hyperparams_dict, updated_cfg)
+
+    else:
+        for iteration, hyperparams in enumerate(grid, 1):
+            hyperparams_dict = dict(zip(param_names, hyperparams))
+
+            # Clone cfg
+            updated_cfg = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
+
+            # Update GP hyperparams
+            for key in gp_grid.keys():
+                if key in hyperparams_dict:
+                    updated_cfg.backend.training[key] = hyperparams_dict[key]
+
+            # Update representation-specific hyperparams
+            if cfg.representations.rep == 'SOAP':
+                for key in param_grid.keys():
+                    updated_cfg.representations.SOAP_params[key] = hyperparams_dict[key]
+
+            elif cfg.representations.rep == 'GAPE':
+                for key in param_grid.keys():
+                    updated_cfg.representations.GAPE_params[key] = hyperparams_dict[key]
+
+            print('-' * 35)
+            print(f'\nIteration {iteration}/{len(grid)}:')
+            print('-' * 35)
+            print(f'Hyperparameters: {hyperparams}')
+            print(f'{hyperparams_dict}')
+
+            eval_param_comb(hyperparams_dict, updated_cfg)
 
     if mlflow_ui:
 
-        mlflow_URI = mlflow.get_tracking_uri()[7:]
-        print(mlflow_URI)
+        mlflow_URI = mlflow.get_tracking_uri()
+
+        print(f'MLflow tracking URI: {mlflow_URI}')
         subprocess.Popen(["mlflow", "ui", "--backend-store-uri", mlflow_URI])
 
         time.sleep(2)
         webbrowser.open("http://127.0.0.1:5000")
 
+
 def eval_param_comb(hyperparams_dict: dict, cfg: DictConfig):
 
-    # TODO: Update the hyperparams in the config (otherwise you train same model over and over again in grid search)
-
-    print("MLflow tracking URI:", mlflow.get_tracking_uri()[7:])
+    experiment_name = cfg.experiment_name
+    mlflow.set_experiment(experiment_name)
 
     with mlflow.start_run():
         mlflow.log_params(hyperparams_dict)
@@ -95,6 +130,7 @@ def eval_param_comb(hyperparams_dict: dict, cfg: DictConfig):
 
         finally:
             print(f"Logged run for: {hyperparams_dict}")
+
 
 if __name__ == "__main__":
     hydra.main(config_path="../conf", config_name="config", version_base="1.1")(eval_model_grid)()
