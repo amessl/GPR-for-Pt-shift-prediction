@@ -1,5 +1,4 @@
 
-import os
 import hydra
 from omegaconf import DictConfig
 from src.predict_sklearn import SklearnGPRegressor
@@ -7,17 +6,22 @@ from src.predict_sklearn import SklearnGPRegressor
 @hydra.main(config_path="../conf", config_name="config", version_base="1.1")
 def eval_model(cfg: DictConfig):
 
-    cfg.representations.rep = 'ChEAP'
-    zeta = 2
-
-    cfg.backend.training.kernel_degree = zeta
-    cfg.backend.testing.kernel_degree = zeta
-
     model = SklearnGPRegressor(config=cfg)
-    model.gpr_train(**cfg.backend.training, report='full')
 
-    model.gpr_test(**cfg.backend.testing, report='full')
+    if cfg.task == "train":
+        model.gpr_train(**cfg.backend.training, report=cfg.report)
+
+    elif cfg.task == "test":
+        model.gpr_test(**cfg.backend.testing, report=cfg.report)
+
+    elif cfg.task is None:
+        print("No mode specified. Carrying out subsequent train and test runs")
+
+        model.gpr_train(**cfg.backend.training, report=cfg.report)
+        model.gpr_test(**cfg.backend.testing, report=cfg.report)
+
+    else:
+        raise ValueError("Invalid task. Use 'train', 'test' or None.")
 
 if __name__ == "__main__":
-    os.environ["HYDRA_FULL_ERROR"] = "1"
     eval_model()
