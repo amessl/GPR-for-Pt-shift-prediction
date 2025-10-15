@@ -1,20 +1,18 @@
 import numpy as np
 import pandas as pd
 import os
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import pickle
+import warnings
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF, WhiteKernel, ConstantKernel
 from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold, learning_curve, ShuffleSplit
 from sklearn.metrics import r2_score, mean_absolute_error, root_mean_squared_error
-from sklearn.preprocessing import StandardScaler
 from base import BaseConfig
 from omegaconf import OmegaConf
 from data_loader import DataLoader
 
-matplotlib.use("TkAgg")
 
 class SklearnGPRegressor(BaseConfig):
     def __init__(self, config):
@@ -37,8 +35,8 @@ class SklearnGPRegressor(BaseConfig):
             raise ValueError("Paths should be a string or a list of strings")
 
         self.fit_path = config.backend.model.fit_path
-    def gpr_train(self, kernel_degree, noise, save_fit=True, stratify_train=True,
-                  ard=False, report=None):
+
+    def gpr_train(self, kernel_degree, noise, save_fit=True, stratify_train=True, report=None):
 
         """
         Uses the sklearn implementation of Gaussian Process Regression. Defines GPR model with linear/
@@ -49,8 +47,9 @@ class SklearnGPRegressor(BaseConfig):
         :param kernel_degree: Degree of the polynomial kernel
         :param noise: Likelihood variance a. k. a. noise level of the data (is only added to K(X,X) of training points,
         noise is added to K(X,X) of test points when using WhiteKernel()
-        :param lc: Whether to generate and plot learning curve
         :param save_fit: Whether to save the state of the fitted model
+        :param stratify_train: Whether the splits in k-fold CV are stratified or not.
+        :param report: Which performance metrics to output. "Errors" for mean errors only and "full" for mean errors and learning curve
 
         :return: CV MAE and RMSE and corresponding standard deviations
         """
@@ -71,45 +70,35 @@ class SklearnGPRegressor(BaseConfig):
             estimator = GaussianProcessRegressor(
                 kernel=Exponentiation(DotProduct(), int(kernel_degree)) + WhiteKernel(noise_level=noise),
                 random_state=randomSeed,
-                alpha=0.0, n_restarts_optimizer=10, normalize_y=True)  # always normalize labels !!
+                alpha=0.0, n_restarts_optimizer=10, normalize_y=True)  # always normalize labels
 
         else:
 
             estimator = GaussianProcessRegressor(kernel=ConstantKernel() * RBF() + WhiteKernel(noise_level=noise), alpha=0.0,
                                                  random_state=randomSeed, n_restarts_optimizer=10, normalize_y=True)
 
-            if ard:
-
-                X_data = StandardScaler().fit_transform(X_data)
-
-                ard_kernel = ConstantKernel() * RBF(length_scale=np.ones(np.array(X_data).shape[1])) + WhiteKernel(noise_level=noise)
-
-                estimator = GaussianProcessRegressor(kernel=ard_kernel, alpha=0.0,
-                                                     random_state=randomSeed, n_restarts_optimizer=10, normalize_y=True)
-
-        # TODO: Check vals of noise (normalize_y)
         print('Training in progress....')
         print(f'Init noise: {noise}')
 
         estimator.fit(X_data, target_data)
 
         opt_noise = estimator.kernel_.k2.noise_level
-        print(f'\nOptimized noise variance: {opt_noise}')
+        print(f'\nOptimized noise variance: {opt_noise:.3f} \n')
 
-        if kernel_degree == 1:
+        if kernel_degree == 0:
+            opt_const = 0
+            opt_lengthscale = estimator.kernel_.k1.k2.length_scale
+            print(f'Optimized RBF lengthscale: {opt_lengthscale:.3f} \n')
+
+        elif kernel_degree == 1:
             opt_const = estimator.kernel_.k1.sigma_0
         else:
             opt_const = estimator.kernel_.k1.kernel.sigma_0
 
-        print(f'Optimized kernel bias: {opt_const}')
+        print(f'Optimized kernel bias: {opt_const:.3f} \n')
 
         lml = estimator.log_marginal_likelihood_value_
-        print(f'Log marginal likelihood: {lml} \n')
-
-        if kernel_degree == 0:
-
-            opt_lengthscale = estimator.kernel_.k1.k2.length_scale
-            print(f'Optimized RBF lengthscale: {opt_lengthscale} \n')
+        print(f'Log marginal likelihood: {lml:.3f} \n')
 
         if stratify_train:
 
@@ -138,20 +127,19 @@ class SklearnGPRegressor(BaseConfig):
 
         else:
 
-            cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)  # TODO: n_splits in config
+            cv = KFold(n_splits=4, random_state=randomSeed, shuffle=True)
             scores_rmse = cross_val_score(estimator, X_data, target_data, scoring='neg_root_mean_squared_error', cv=cv,
                                           n_jobs=1)
             scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1)
 
         if save_fit:
-            directory = f'{self.fit_path}{"_".join([str(param) for param in self.descriptor_params])}'
+            directory = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
             os.makedirs(directory, exist_ok=True)
 
-            filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
+            filename = f'GPR_z{kernel_degree}_opt_a{noise}.sav'
 
             pickle.dump(estimator, open(os.path.join(directory, filename), 'wb'))
-            print(f'Fit saved to {directory}.')
-            print(f'Fit path: {self.fit_path}')
+            print(f'Fit saved to {directory}. \n')
 
         metrics = {
             'Training MAE': np.mean(np.abs(scores_mae)),
@@ -162,7 +150,7 @@ class SklearnGPRegressor(BaseConfig):
 
         if report == 'full':
 
-            print('Generating learning curves. May take some time.')
+            print('Generating learning curves. May take some time. \n')
             print("_" * 65)
 
             self._plot_learning_curve(estimator, X_data, target_data, title=f'{self.descriptor_type}')
@@ -176,7 +164,7 @@ class SklearnGPRegressor(BaseConfig):
             print("{:<20} {:<10}".format("Metric", "Value (ppm)"))
             print("-" * 35)
             for key, value in metrics.items():
-                print("{:<20} {:.0f}".format(key, value))
+                print("{:<20} {:.0f}".format(key, value), "\n")
 
         elif report is None:
             pass
@@ -185,7 +173,7 @@ class SklearnGPRegressor(BaseConfig):
             raise Exception(f"Unsupported option '{report}' for report. "
                             f"Specify as 'full' for printing error table "
                             f"and displaying learning curves, 'errors' for only"
-                            f"printing error table leave at default for no report.")
+                            f"printing error table leave at default for no report. \n")
 
 
         return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(
@@ -193,11 +181,11 @@ class SklearnGPRegressor(BaseConfig):
 
     def gpr_test(self, kernel_degree, noise, report=None):
 
-        folder = f'{self.fit_path}{"_".join([str(param) for param in self.descriptor_params])}'
+        folder = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
 
         if os.path.isdir(folder):
 
-            filename = f'GPR_z{kernel_degree}_opt_a{noise}_{self.descriptor_type}.sav'
+            filename = f'GPR_z{kernel_degree}_opt_a{noise}.sav'
 
             try:
 
@@ -226,7 +214,7 @@ class SklearnGPRegressor(BaseConfig):
         metrics = {'Test MAE': test_mae,
                    'Test RMSE': test_rmse}
 
-        residuals = [observed - pred for pred, observed in zip(predictions, target_holdout)]
+        residuals = [observed-pred for pred, observed in zip(predictions, target_holdout)]
 
         if report == 'full':
 
@@ -234,9 +222,8 @@ class SklearnGPRegressor(BaseConfig):
                                    title=f'{self.descriptor_type}', holdout_names=holdout_names)
 
             print('-'*35)
-            print(f'Correlation: {correlation}')
-            print(f'Uncertainties: {std}')
-            print(f'Average Uncertainties: {np.mean(std)}')
+            print(f'Correlation: {correlation:.2f}')
+            print(f'Average Uncertainty (ppm): {np.mean(std):.0f}')
             print('-' * 35)
 
             self._empirical_coverage(predictions, std, target_holdout)
@@ -282,6 +269,8 @@ class SklearnGPRegressor(BaseConfig):
 
     @staticmethod
     def _plot_learning_curve(estimator, X_data, target_data, title):
+        warnings.filterwarnings('ignore')
+
         train_sizes, train_scores, test_scores = learning_curve(estimator, X_data, target_data,
                                                                 train_sizes=np.linspace(0.2, 1.0, 5),
                                                                 cv=ShuffleSplit(n_splits=4, test_size=0.2,
@@ -338,12 +327,9 @@ class SklearnGPRegressor(BaseConfig):
 
                 residual_list.append(abs(res))
 
-            print(f"Maximum outlier deviation: {max(residual_list)}")
-            print(f"Mean outlier deviation: {np.mean(residual_list)}")
-            print(f"Standard deviation: {np.std(residual_list)}")
-
-            print('Residuals:')
-            print(residuals)
+            print(f"Maximum outlier deviation: {max(residual_list):.0f}")
+            print(f"Mean outlier deviation: {np.mean(residual_list):.0f}")
+            print(f"Standard deviation: {np.std(residual_list):.0f}")
 
         plt.xlabel('Measured (ppm)', fontsize=16)
         plt.ylabel('Predicted (ppm)', fontsize=16)
@@ -355,25 +341,4 @@ class SklearnGPRegressor(BaseConfig):
 
         return correlation
 
-    @staticmethod
-    def _plot_hyperparameters(estimator):
-        sigma_0_range = np.logspace(-5, 5, num=10)
-        noise_level_range = np.logspace(-5, 5, num=10)
-        sigma_0_grid, noise_level_grid = np.meshgrid(sigma_0_range, noise_level_range)
-        log_marginal_likelihood = [estimator.log_marginal_likelihood(theta=np.log([0.36, sigma_value, noise]))
-                                   for sigma_value, noise in zip(sigma_0_grid.ravel(), noise_level_grid.ravel())]
-        log_marginal_likelihood = np.reshape(log_marginal_likelihood, newshape=noise_level_grid.shape)
-        vmin, vmax = (-log_marginal_likelihood).min(), 10
-        level = np.around(np.logspace(np.log10(vmin), np.log10(vmax), num=10), decimals=1)
-        plt.contour(sigma_0_grid, noise_level_grid, -log_marginal_likelihood, levels=level,
-                    norm=LogNorm(vmin=vmin, vmax=vmax))
-        plt.colorbar()
-        plt.xscale("log")
-        plt.yscale("log")
-        plt.xlabel("Sigma 0")
-        plt.ylabel("Noise-level")
-        plt.title("Log-marginal-likelihood")
-        plt.show()
-
-# TODO: add feature to generate SOAPs from SMILES strings
 # TODO: Don't forget README before re-submitting
