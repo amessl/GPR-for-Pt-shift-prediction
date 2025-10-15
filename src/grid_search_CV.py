@@ -1,6 +1,4 @@
-import os
 import numpy as np
-import numpy.linalg
 from predict_sklearn import SklearnGPRegressor
 import itertools
 import hydra
