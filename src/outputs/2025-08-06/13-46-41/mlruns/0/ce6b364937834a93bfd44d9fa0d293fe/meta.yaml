@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-06/13-46-41/mlruns/0/ce6b364937834a93bfd44d9fa0d293fe/artifacts
+end_time: 1754480971871
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ce6b364937834a93bfd44d9fa0d293fe
+run_name: rumbling-bird-912
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754480968482
+status: 4
+tags: []
+user_id: alex

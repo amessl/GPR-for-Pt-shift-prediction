@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/16-03-55/mlruns/0/5c918384b8ea4e1691bbeb20fd6e841e/artifacts
+end_time: 1754403149876
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5c918384b8ea4e1691bbeb20fd6e841e
+run_name: adventurous-ray-958
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754403055591
+status: 3
+tags: []
+user_id: alex

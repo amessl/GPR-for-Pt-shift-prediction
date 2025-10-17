@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/17-33-31/mlruns/0/6c52e020d2fe402297ecdecec042cc5b/artifacts
+end_time: 1753284850563
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 6c52e020d2fe402297ecdecec042cc5b
+run_name: luxuriant-toad-173
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753284812125
+status: 3
+tags: []
+user_id: alex

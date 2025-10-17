@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-20/15-33-23/mlruns/708551430090919497/370a97a4c8d344e4b3da527181f8b24f/artifacts
+end_time: 1755696886856
+entry_point_name: ''
+experiment_id: '708551430090919497'
+lifecycle_stage: active
+run_id: 370a97a4c8d344e4b3da527181f8b24f
+run_name: righteous-crane-629
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1755696803340
+status: 3
+tags: []
+user_id: alex

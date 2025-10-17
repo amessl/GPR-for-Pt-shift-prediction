@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-50-04/mlruns/0/5b7b114a919e40a7ad82a56a5a887b65/artifacts
+end_time: 1754398204248
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5b7b114a919e40a7ad82a56a5a887b65
+run_name: righteous-owl-470
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754398204241
+status: 3
+tags: []
+user_id: alex

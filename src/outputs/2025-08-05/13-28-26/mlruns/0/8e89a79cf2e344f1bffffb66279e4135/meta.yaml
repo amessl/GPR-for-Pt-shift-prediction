@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/13-28-26/mlruns/0/8e89a79cf2e344f1bffffb66279e4135/artifacts
+end_time: 1754393340609
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 8e89a79cf2e344f1bffffb66279e4135
+run_name: placid-colt-504
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754393306412
+status: 3
+tags: []
+user_id: alex

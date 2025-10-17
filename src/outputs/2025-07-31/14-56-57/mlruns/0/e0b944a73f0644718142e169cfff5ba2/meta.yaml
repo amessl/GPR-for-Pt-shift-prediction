@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/e0b944a73f0644718142e169cfff5ba2/artifacts
+end_time: 1753968118205
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e0b944a73f0644718142e169cfff5ba2
+run_name: useful-gnu-208
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968082587
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/646c310bf0084df1901a15c6e7e54ed1/artifacts
+end_time: 1753967799563
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 646c310bf0084df1901a15c6e7e54ed1
+run_name: rambunctious-bass-45
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753967769658
+status: 3
+tags: []
+user_id: alex

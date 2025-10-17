@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/c08a027f8d514a39a66e4c3146abc2c5/artifacts
+end_time: 1753970223527
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c08a027f8d514a39a66e4c3146abc2c5
+run_name: resilient-rat-982
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753970183846
+status: 3
+tags: []
+user_id: alex

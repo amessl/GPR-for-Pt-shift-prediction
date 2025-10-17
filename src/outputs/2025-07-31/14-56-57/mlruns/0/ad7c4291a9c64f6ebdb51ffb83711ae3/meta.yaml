@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/ad7c4291a9c64f6ebdb51ffb83711ae3/artifacts
+end_time: 1753972472293
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ad7c4291a9c64f6ebdb51ffb83711ae3
+run_name: learned-dove-441
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753972435035
+status: 3
+tags: []
+user_id: alex

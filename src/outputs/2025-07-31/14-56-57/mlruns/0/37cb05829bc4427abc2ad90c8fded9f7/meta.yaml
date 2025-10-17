@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/37cb05829bc4427abc2ad90c8fded9f7/artifacts
+end_time: 1753968706513
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 37cb05829bc4427abc2ad90c8fded9f7
+run_name: skittish-goat-136
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968673110
+status: 3
+tags: []
+user_id: alex

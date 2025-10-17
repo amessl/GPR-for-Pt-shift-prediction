@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/2acdfd42a8a540e4a87dc3527af8d08d/artifacts
+end_time: 1753968559204
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2acdfd42a8a540e4a87dc3527af8d08d
+run_name: secretive-doe-89
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968524918
+status: 3
+tags: []
+user_id: alex

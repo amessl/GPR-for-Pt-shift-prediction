@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/16-03-55/mlruns/0/d71ae45fa94c43f792f66cc8b8dd0684/artifacts
+end_time: 1754402834826
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d71ae45fa94c43f792f66cc8b8dd0684
+run_name: enthused-donkey-913
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754402716273
+status: 3
+tags: []
+user_id: alex

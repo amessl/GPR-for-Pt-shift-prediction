@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/941b205809b2473dbb955ae972f238f1/artifacts
+end_time: 1753968638325
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 941b205809b2473dbb955ae972f238f1
+run_name: stylish-toad-600
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968598691
+status: 3
+tags: []
+user_id: alex

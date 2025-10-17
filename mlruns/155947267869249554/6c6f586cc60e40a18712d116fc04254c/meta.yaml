@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/155947267869249554/6c6f586cc60e40a18712d116fc04254c/artifacts
+end_time: 1760529531928
+entry_point_name: ''
+experiment_id: '155947267869249554'
+lifecycle_stage: active
+run_id: 6c6f586cc60e40a18712d116fc04254c
+run_name: righteous-ant-430
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760529378977
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/13-43-48/mlruns/0/dcd03cb9da164da388a72e79c8e4f87e/artifacts
+end_time: 1753962307614
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: dcd03cb9da164da388a72e79c8e4f87e
+run_name: brawny-mule-241
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753962268901
+status: 3
+tags: []
+user_id: alex

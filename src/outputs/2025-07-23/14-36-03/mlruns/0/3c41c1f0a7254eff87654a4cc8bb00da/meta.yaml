@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/3c41c1f0a7254eff87654a4cc8bb00da/artifacts
+end_time: 1753276318607
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3c41c1f0a7254eff87654a4cc8bb00da
+run_name: classy-conch-861
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753276203570
+status: 3
+tags: []
+user_id: alex

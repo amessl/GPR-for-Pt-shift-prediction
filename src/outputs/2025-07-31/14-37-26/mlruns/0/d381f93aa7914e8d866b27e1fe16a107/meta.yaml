@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-37-26/mlruns/0/d381f93aa7914e8d866b27e1fe16a107/artifacts
+end_time: 1753965516645
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d381f93aa7914e8d866b27e1fe16a107
+run_name: agreeable-moth-553
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753965479038
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,6 @@
+artifact_location: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/17-26-07/mlruns/146159862299864383
+creation_time: 1753284367980
+experiment_id: '146159862299864383'
+last_update_time: 1753284367980
+lifecycle_stage: active
+name: grid_search_0

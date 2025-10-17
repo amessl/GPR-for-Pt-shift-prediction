@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-50-04/mlruns/0/237c1616cf4e4195bc2482be7a8fad06/artifacts
+end_time: 1754398204262
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 237c1616cf4e4195bc2482be7a8fad06
+run_name: tasteful-goose-899
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754398204256
+status: 3
+tags: []
+user_id: alex

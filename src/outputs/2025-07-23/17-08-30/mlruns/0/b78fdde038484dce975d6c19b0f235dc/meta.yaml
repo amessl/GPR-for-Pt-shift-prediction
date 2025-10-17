@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/17-08-30/mlruns/0/b78fdde038484dce975d6c19b0f235dc/artifacts
+end_time: 1753283389036
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: b78fdde038484dce975d6c19b0f235dc
+run_name: luminous-stork-130
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753283348306
+status: 3
+tags: []
+user_id: alex

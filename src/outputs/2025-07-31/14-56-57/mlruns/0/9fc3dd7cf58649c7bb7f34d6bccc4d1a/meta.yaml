@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/9fc3dd7cf58649c7bb7f34d6bccc4d1a/artifacts
+end_time: 1753966823742
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 9fc3dd7cf58649c7bb7f34d6bccc4d1a
+run_name: abrasive-quail-347
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753966787941
+status: 3
+tags: []
+user_id: alex

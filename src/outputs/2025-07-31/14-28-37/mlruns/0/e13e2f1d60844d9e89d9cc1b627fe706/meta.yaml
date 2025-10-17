@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-28-37/mlruns/0/e13e2f1d60844d9e89d9cc1b627fe706/artifacts
+end_time: 1753964992008
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e13e2f1d60844d9e89d9cc1b627fe706
+run_name: glamorous-chimp-512
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753964953958
+status: 3
+tags: []
+user_id: alex

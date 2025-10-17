@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/eeaa2d812cdc489d962392bc6ecac02b/artifacts
+end_time: 1753972101576
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: eeaa2d812cdc489d962392bc6ecac02b
+run_name: placid-steed-804
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753972064438
+status: 3
+tags: []
+user_id: alex

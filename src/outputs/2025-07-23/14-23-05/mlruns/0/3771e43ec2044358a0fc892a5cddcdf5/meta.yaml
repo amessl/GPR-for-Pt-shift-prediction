@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-23-05/mlruns/0/3771e43ec2044358a0fc892a5cddcdf5/artifacts
+end_time: 1753273413401
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3771e43ec2044358a0fc892a5cddcdf5
+run_name: delightful-croc-91
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753273385450
+status: 4
+tags: []
+user_id: alex

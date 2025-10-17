@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-22-35/mlruns/0/94b4499e444043488f6b547d8e42c2b1/artifacts
+end_time: 1754400156140
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 94b4499e444043488f6b547d8e42c2b1
+run_name: legendary-zebra-143
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754400156133
+status: 3
+tags: []
+user_id: alex

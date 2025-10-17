@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/155947267869249554/704671105b0945789d5b63d3acbaad48/artifacts
+end_time: 1760529784481
+entry_point_name: ''
+experiment_id: '155947267869249554'
+lifecycle_stage: active
+run_id: 704671105b0945789d5b63d3acbaad48
+run_name: aged-stag-265
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760529525648
+status: 3
+tags: []
+user_id: alex

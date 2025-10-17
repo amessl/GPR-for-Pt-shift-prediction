@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/17-03-56/mlruns/0/17af72aacc46448aad050e2dec28a3b9/artifacts
+end_time: 1753283072864
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 17af72aacc46448aad050e2dec28a3b9
+run_name: bold-dog-320
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753283036159
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-19-01/mlruns/0/66253a1d28f64c6d98341e71cb9e775c/artifacts
+end_time: 1754396342048
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 66253a1d28f64c6d98341e71cb9e775c
+run_name: carefree-eel-781
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396342044
+status: 3
+tags: []
+user_id: alex

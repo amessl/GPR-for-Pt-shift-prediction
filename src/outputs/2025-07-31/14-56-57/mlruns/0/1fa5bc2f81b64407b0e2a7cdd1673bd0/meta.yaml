@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/1fa5bc2f81b64407b0e2a7cdd1673bd0/artifacts
+end_time: 1753970183844
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 1fa5bc2f81b64407b0e2a7cdd1673bd0
+run_name: mercurial-grub-485
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753970150419
+status: 3
+tags: []
+user_id: alex

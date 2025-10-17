@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-54-32/mlruns/0/aa6aec2ac3c74a848d679cb66f0df076/artifacts
+end_time: 1754398473001
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: aa6aec2ac3c74a848d679cb66f0df076
+run_name: magnificent-carp-813
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754398472995
+status: 3
+tags: []
+user_id: alex

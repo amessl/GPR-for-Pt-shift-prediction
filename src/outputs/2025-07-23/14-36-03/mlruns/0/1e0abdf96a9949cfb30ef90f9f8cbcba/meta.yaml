@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/1e0abdf96a9949cfb30ef90f9f8cbcba/artifacts
+end_time: 1753275898115
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 1e0abdf96a9949cfb30ef90f9f8cbcba
+run_name: orderly-steed-884
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753275795630
+status: 3
+tags: []
+user_id: alex

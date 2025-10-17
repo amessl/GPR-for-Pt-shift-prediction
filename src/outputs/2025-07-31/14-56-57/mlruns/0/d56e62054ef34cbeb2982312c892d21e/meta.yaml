@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/d56e62054ef34cbeb2982312c892d21e/artifacts
+end_time: 1753966747833
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d56e62054ef34cbeb2982312c892d21e
+run_name: inquisitive-ray-953
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753966714729
+status: 3
+tags: []
+user_id: alex

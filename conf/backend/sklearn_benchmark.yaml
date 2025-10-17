@@ -1,0 +1,21 @@
+model:
+  _target_: src.predict_sklearn.SklearnGPRegressor
+  data_loader:
+    _target_: src.data_loader.DataLoader
+  mode: write
+  target_path:
+    - ${data_root}/benchmark/labels/train/train_shifts.csv
+    - ${data_root}/benchmark/labels/test/test_shifts.csv
+  fit_path:
+    - ${data_root}/_benchmark/fits/
+
+training:
+  kernel_degree: 2
+  noise: 0.01
+  save_fit: true
+  stratify_train: true
+  ard: false
+
+testing:
+  kernel_degree: 2
+  noise: 0.01

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/b12c62327d114707ae0e2d95e24b6a77/artifacts
+end_time: 1753275795627
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: b12c62327d114707ae0e2d95e24b6a77
+run_name: bald-crane-136
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753275700297
+status: 3
+tags: []
+user_id: alex

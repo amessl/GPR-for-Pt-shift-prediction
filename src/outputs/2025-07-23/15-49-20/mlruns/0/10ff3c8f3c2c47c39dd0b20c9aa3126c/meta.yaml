@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/15-49-20/mlruns/0/10ff3c8f3c2c47c39dd0b20c9aa3126c/artifacts
+end_time: 1753278662655
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 10ff3c8f3c2c47c39dd0b20c9aa3126c
+run_name: unruly-bee-47
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753278560647
+status: 3
+tags: []
+user_id: alex

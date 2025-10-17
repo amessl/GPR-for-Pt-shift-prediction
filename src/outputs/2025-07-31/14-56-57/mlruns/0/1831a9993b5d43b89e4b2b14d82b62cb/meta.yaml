@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/1831a9993b5d43b89e4b2b14d82b62cb/artifacts
+end_time: 1753969248063
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 1831a9993b5d43b89e4b2b14d82b62cb
+run_name: vaunted-shark-945
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753969213593
+status: 3
+tags: []
+user_id: alex

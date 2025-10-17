@@ -1,0 +1,105 @@
+data_root: /home/alex/Pt_NMR/data
+xyz_base: st_
+xyz_dir:
+- ${data_root}/structures/train_split
+- ${data_root}/structures/test_split
+central_atom: Pt
+mode: write
+experiment_name: example
+representations:
+  rep: GAPE
+  ChEAP_paths:
+  - ${data_root}/representations/SIF/train/
+  - ${data_root}/representations/SIF/test/
+  ChEAP_params:
+  - pauling_EN
+  - nuclear_charge
+  - atomic_radius
+  - qmol
+  - valency
+  rescale_ChEAP: true
+  normalize_ChEAP: false
+  GAPE_paths:
+  - ${data_root}/representations/APE_RF/train/
+  - ${data_root}/representations/APE_RF/test/
+  GAPE_params:
+  - 3.0
+  - 500
+  smooth_cutoff: false
+  normalize_GAPE: false
+  rescale_GAPE: true
+  SOAP_paths:
+  - ${data_root}/representations/SOAP/train/
+  - ${data_root}/representations/SOAP/test/
+  SOAP_params:
+  - 2.0
+  - 3
+  - 5
+  normalize_SOAP: true
+splitting:
+  target:
+    original_target: ${data_root}/labels/total_set_clean_120525.csv
+    binned_target: ${data_root}/labels/total_set_clean_binned.csv
+    split_target: ${data_root}/labels/train_test_split/
+  structures:
+    original_xyz: ${data_root}/structures/total/
+    split_xyz: ${data_root}/structures/
+  splitting:
+    k_quantiles: 10
+    test_size: 0.2
+    randomSeed: 42
+    run_ks: true
+backend:
+  model:
+    _target_: src.predict_sklearn.SklearnGPRegressor
+    data_loader:
+      _target_: src.data_loader.DataLoader
+    mode: write
+    target_path:
+    - ${data_root}/labels/train_test_split/indexed_targets_train.csv
+    - ${data_root}/labels/train_test_split/indexed_targets_test.csv
+  training:
+    kernel_degree: 1
+    noise: 0.1
+    save_fit: true
+    stratify_train: true
+    ard: false
+  testing:
+    kernel_degree: 2
+    noise: 0.1
+grid_search:
+  GAPE_grid:
+    rcut:
+    - 2.0
+    - 2.5
+    dim:
+    - 500
+    - 1000
+  SOAP_grid:
+    rcut:
+    - 2.0
+    - 2.5
+    - 3.0
+    - 3.5
+    - 4.0
+    - 4.5
+    - 5.0
+    nmax:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    lmax:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+  GP_grid:
+    zeta:
+    - 1

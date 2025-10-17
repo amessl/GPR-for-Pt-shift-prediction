@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/db0afd66e83b44998f78698bc1b6454d/artifacts
+end_time: 1753970296155
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: db0afd66e83b44998f78698bc1b6454d
+run_name: powerful-wasp-105
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753970258026
+status: 3
+tags: []
+user_id: alex

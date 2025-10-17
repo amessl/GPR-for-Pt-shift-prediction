@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/13-43-48/mlruns/0/1c83db1edd0a4131a855d53454e25891/artifacts
+end_time: 1753962381124
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 1c83db1edd0a4131a855d53454e25891
+run_name: funny-auk-952
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753962344116
+status: 3
+tags: []
+user_id: alex

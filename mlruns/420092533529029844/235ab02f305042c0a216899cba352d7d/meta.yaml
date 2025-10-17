@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/420092533529029844/235ab02f305042c0a216899cba352d7d/artifacts
+end_time: 1760529104040
+entry_point_name: ''
+experiment_id: '420092533529029844'
+lifecycle_stage: active
+run_id: 235ab02f305042c0a216899cba352d7d
+run_name: salty-chimp-703
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760528950762
+status: 3
+tags: []
+user_id: alex

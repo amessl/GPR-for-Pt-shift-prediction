@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-53-38/mlruns/0/ae856578b7f94f418f93eff4389b6cb7/artifacts
+end_time: 1754402098317
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ae856578b7f94f418f93eff4389b6cb7
+run_name: traveling-sponge-595
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754402019079
+status: 3
+tags: []
+user_id: alex

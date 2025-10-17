@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/13-55-10/mlruns/0/434849a2ecd243e2bee7f3b3cd906b58/artifacts
+end_time: 1753963066782
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 434849a2ecd243e2bee7f3b3cd906b58
+run_name: chill-ape-708
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753963026346
+status: 3
+tags: []
+user_id: alex

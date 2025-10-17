@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/cd35df018a264a1e842d88f0f2e06a42/artifacts
+end_time: 1753966685829
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: cd35df018a264a1e842d88f0f2e06a42
+run_name: delicate-boar-528
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753966648041
+status: 3
+tags: []
+user_id: alex

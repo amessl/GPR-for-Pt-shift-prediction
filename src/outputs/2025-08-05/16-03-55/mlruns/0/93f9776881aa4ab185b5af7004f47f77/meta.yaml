@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/16-03-55/mlruns/0/93f9776881aa4ab185b5af7004f47f77/artifacts
+end_time: 1754403607490
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 93f9776881aa4ab185b5af7004f47f77
+run_name: aged-lamb-159
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754403437156
+status: 3
+tags: []
+user_id: alex

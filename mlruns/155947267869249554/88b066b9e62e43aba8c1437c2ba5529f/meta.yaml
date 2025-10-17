@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/155947267869249554/88b066b9e62e43aba8c1437c2ba5529f/artifacts
+end_time: 1760529817099
+entry_point_name: ''
+experiment_id: '155947267869249554'
+lifecycle_stage: active
+run_id: 88b066b9e62e43aba8c1437c2ba5529f
+run_name: upbeat-moose-635
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760529658615
+status: 3
+tags: []
+user_id: alex

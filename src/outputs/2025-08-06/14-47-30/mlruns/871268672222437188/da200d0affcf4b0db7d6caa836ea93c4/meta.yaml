@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-06/14-47-30/mlruns/871268672222437188/da200d0affcf4b0db7d6caa836ea93c4/artifacts
+end_time: 1754484685623
+entry_point_name: ''
+experiment_id: '871268672222437188'
+lifecycle_stage: active
+run_id: da200d0affcf4b0db7d6caa836ea93c4
+run_name: charming-yak-845
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754484450861
+status: 3
+tags: []
+user_id: alex

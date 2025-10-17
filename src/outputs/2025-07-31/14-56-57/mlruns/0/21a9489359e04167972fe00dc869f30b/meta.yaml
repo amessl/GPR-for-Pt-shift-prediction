@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/21a9489359e04167972fe00dc869f30b/artifacts
+end_time: 1753967170663
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 21a9489359e04167972fe00dc869f30b
+run_name: beautiful-gull-544
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753967133141
+status: 3
+tags: []
+user_id: alex

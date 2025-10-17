@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-25-39/mlruns/0/8cd41774bed14687bfb8233c9ca3ddd3/artifacts
+end_time: 1754397143320
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 8cd41774bed14687bfb8233c9ca3ddd3
+run_name: useful-bee-339
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754397034806
+status: 3
+tags: []
+user_id: alex

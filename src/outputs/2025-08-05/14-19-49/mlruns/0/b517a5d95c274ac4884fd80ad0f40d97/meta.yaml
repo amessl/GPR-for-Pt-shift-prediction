@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-19-49/mlruns/0/b517a5d95c274ac4884fd80ad0f40d97/artifacts
+end_time: 1754396390140
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: b517a5d95c274ac4884fd80ad0f40d97
+run_name: clumsy-tern-655
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396390135
+status: 3
+tags: []
+user_id: alex

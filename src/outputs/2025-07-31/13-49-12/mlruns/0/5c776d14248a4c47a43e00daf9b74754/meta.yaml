@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/13-49-12/mlruns/0/5c776d14248a4c47a43e00daf9b74754/artifacts
+end_time: 1753962626959
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5c776d14248a4c47a43e00daf9b74754
+run_name: salty-fawn-976
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753962587443
+status: 3
+tags: []
+user_id: alex

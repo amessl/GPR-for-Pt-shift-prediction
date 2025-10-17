@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/f0b05f2de00e49f7a0b0f72440d11b77/artifacts
+end_time: 1753967438438
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f0b05f2de00e49f7a0b0f72440d11b77
+run_name: marvelous-squid-395
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753967399849
+status: 3
+tags: []
+user_id: alex

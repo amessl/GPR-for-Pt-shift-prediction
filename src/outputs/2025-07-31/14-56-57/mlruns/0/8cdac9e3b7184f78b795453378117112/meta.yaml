@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/8cdac9e3b7184f78b795453378117112/artifacts
+end_time: 1753968155966
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 8cdac9e3b7184f78b795453378117112
+run_name: clean-gnu-568
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968118216
+status: 3
+tags: []
+user_id: alex

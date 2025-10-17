@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-06/13-52-05/mlruns/0/2f86a710391e43fd9e58f81675b98ef4/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2f86a710391e43fd9e58f81675b98ef4
+run_name: debonair-bird-300
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754481125707
+status: 1
+tags: []
+user_id: alex

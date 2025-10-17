@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/0ac0b6d97b4e4a5895579943379d1ad2/artifacts
+end_time: 1753969430607
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 0ac0b6d97b4e4a5895579943379d1ad2
+run_name: big-rook-309
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753969395855
+status: 3
+tags: []
+user_id: alex

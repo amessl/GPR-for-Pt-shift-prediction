@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-19-49/mlruns/0/3177de91db3f496f9a37ba8daf417391/artifacts
+end_time: 1754396390180
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3177de91db3f496f9a37ba8daf417391
+run_name: efficient-koi-397
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396390175
+status: 3
+tags: []
+user_id: alex

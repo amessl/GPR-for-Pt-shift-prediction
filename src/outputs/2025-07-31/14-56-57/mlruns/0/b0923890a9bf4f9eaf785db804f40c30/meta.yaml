@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/b0923890a9bf4f9eaf785db804f40c30/artifacts
+end_time: 1753971809396
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: b0923890a9bf4f9eaf785db804f40c30
+run_name: rambunctious-roo-646
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753971774673
+status: 3
+tags: []
+user_id: alex

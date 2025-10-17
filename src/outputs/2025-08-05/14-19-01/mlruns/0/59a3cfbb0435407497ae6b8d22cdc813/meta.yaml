@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-19-01/mlruns/0/59a3cfbb0435407497ae6b8d22cdc813/artifacts
+end_time: 1754396342023
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 59a3cfbb0435407497ae6b8d22cdc813
+run_name: intelligent-mare-365
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396342017
+status: 3
+tags: []
+user_id: alex

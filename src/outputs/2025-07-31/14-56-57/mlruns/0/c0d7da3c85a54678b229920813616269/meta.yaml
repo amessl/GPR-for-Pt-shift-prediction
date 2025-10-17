@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/c0d7da3c85a54678b229920813616269/artifacts
+end_time: 1753970877332
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c0d7da3c85a54678b229920813616269
+run_name: auspicious-conch-400
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753970840091
+status: 3
+tags: []
+user_id: alex

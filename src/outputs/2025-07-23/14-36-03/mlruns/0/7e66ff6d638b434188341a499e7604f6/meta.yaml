@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/7e66ff6d638b434188341a499e7604f6/artifacts
+end_time: 1753275387111
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 7e66ff6d638b434188341a499e7604f6
+run_name: adorable-kit-944
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753275280924
+status: 3
+tags: []
+user_id: alex

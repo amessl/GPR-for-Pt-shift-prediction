@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/40279a6308014916853ae55c1a44bf73/artifacts
+end_time: 1753967588510
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 40279a6308014916853ae55c1a44bf73
+run_name: puzzled-perch-776
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753967549537
+status: 3
+tags: []
+user_id: alex

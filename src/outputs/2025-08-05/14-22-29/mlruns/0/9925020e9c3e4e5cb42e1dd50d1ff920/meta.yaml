@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-22-29/mlruns/0/9925020e9c3e4e5cb42e1dd50d1ff920/artifacts
+end_time: 1754396549970
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 9925020e9c3e4e5cb42e1dd50d1ff920
+run_name: crawling-midge-365
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396549965
+status: 3
+tags: []
+user_id: alex

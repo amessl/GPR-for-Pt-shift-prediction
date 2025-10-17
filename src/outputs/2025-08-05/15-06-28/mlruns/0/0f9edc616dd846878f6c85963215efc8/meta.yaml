@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-06-28/mlruns/0/0f9edc616dd846878f6c85963215efc8/artifacts
+end_time: 1754399188476
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 0f9edc616dd846878f6c85963215efc8
+run_name: resilient-doe-152
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754399188469
+status: 3
+tags: []
+user_id: alex

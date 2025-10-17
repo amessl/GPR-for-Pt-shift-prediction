@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/16-03-55/mlruns/0/ccfd3c761ca349a4b48a3d8ad0cd9899/artifacts
+end_time: 1754403955730
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ccfd3c761ca349a4b48a3d8ad0cd9899
+run_name: rumbling-frog-275
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754403949171
+status: 3
+tags: []
+user_id: alex

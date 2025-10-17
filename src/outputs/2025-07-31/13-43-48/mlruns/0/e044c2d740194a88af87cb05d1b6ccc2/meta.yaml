@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/13-43-48/mlruns/0/e044c2d740194a88af87cb05d1b6ccc2/artifacts
+end_time: 1753962268898
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e044c2d740194a88af87cb05d1b6ccc2
+run_name: unique-trout-154
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753962229139
+status: 3
+tags: []
+user_id: alex

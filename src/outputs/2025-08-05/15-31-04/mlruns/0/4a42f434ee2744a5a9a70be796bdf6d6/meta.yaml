@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-31-04/mlruns/0/4a42f434ee2744a5a9a70be796bdf6d6/artifacts
+end_time: 1754401079797
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 4a42f434ee2744a5a9a70be796bdf6d6
+run_name: skillful-fawn-591
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754400955172
+status: 3
+tags: []
+user_id: alex

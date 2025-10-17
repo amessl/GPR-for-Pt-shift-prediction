@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/926e31f7bfe3483a881c9c68720f0737/artifacts
+end_time: 1753972615070
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 926e31f7bfe3483a881c9c68720f0737
+run_name: abrasive-fish-15
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753972578678
+status: 3
+tags: []
+user_id: alex

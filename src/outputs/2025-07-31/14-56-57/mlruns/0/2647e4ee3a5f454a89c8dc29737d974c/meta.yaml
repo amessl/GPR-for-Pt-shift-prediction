@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/2647e4ee3a5f454a89c8dc29737d974c/artifacts
+end_time: 1753969918179
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2647e4ee3a5f454a89c8dc29737d974c
+run_name: bold-hog-941
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753969881502
+status: 3
+tags: []
+user_id: alex

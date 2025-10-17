@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/16-03-55/mlruns/0/5d839e77a6cf4a66828272c46ae16299/artifacts
+end_time: 1754403941874
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5d839e77a6cf4a66828272c46ae16299
+run_name: intelligent-mole-74
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754403934617
+status: 3
+tags: []
+user_id: alex

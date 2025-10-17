@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/bf24219f2b174fc782dec46974e12a91/artifacts
+end_time: 1753971570828
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: bf24219f2b174fc782dec46974e12a91
+run_name: caring-turtle-553
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753971534911
+status: 3
+tags: []
+user_id: alex

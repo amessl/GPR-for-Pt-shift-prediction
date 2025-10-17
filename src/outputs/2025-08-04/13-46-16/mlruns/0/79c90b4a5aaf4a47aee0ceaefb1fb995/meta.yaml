@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-04/13-46-16/mlruns/0/79c90b4a5aaf4a47aee0ceaefb1fb995/artifacts
+end_time: 1754308015024
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 79c90b4a5aaf4a47aee0ceaefb1fb995
+run_name: persistent-goat-811
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754307976304
+status: 3
+tags: []
+user_id: alex

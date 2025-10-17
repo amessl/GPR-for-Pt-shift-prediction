@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-06/14-47-30/mlruns/994591315559768693/e771593dae2943828cd8731d2ab5bf0a/artifacts
+end_time: 1754484749009
+entry_point_name: ''
+experiment_id: '994591315559768693'
+lifecycle_stage: active
+run_id: e771593dae2943828cd8731d2ab5bf0a
+run_name: righteous-doe-298
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754484450860
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,44 @@
+ # Configuration of representations
+
+rep: SOAP # Type of reprsentation is None per default and
+          # needs to be specified att runtime or when instantiating model
+
+# ChEAP
+ChEAP_paths: 
+  - ${data_root}/benchmark/representations/ChEAP/train/
+  - ${data_root}/benchmark/representations/ChEAP/test/
+
+ChEAP_params:
+  - pauling_EN
+  - nuclear_charge
+  - atomic_radius
+  - qmol
+  - valency
+
+rescale_ChEAP: true
+normalize_ChEAP: false
+
+# GAPE
+GAPE_paths:
+  - ${data_root}/benchmark/representations/GAPE/train/
+  - ${data_root}/benchmark/representations/GAPE/test/
+
+GAPE_params:
+  rcut: 2.0 # cutoff
+  dim: 2000 # dimensionality
+
+smooth_cutoff: false
+normalize_GAPE: false
+rescale_GAPE: true
+
+# SOAP
+SOAP_paths:
+  - ${data_root}/benchmark/representations/SOAP/train/
+  - ${data_root}/benchmark/representations/SOAP/test/
+
+SOAP_params:
+  rcut: 2.0 #rcut
+  nmax: 2 # nmax
+  lmax: 6 #lmax
+
+normalize_SOAP: true

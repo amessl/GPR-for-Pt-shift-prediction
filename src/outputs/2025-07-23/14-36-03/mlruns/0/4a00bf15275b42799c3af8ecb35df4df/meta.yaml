@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/4a00bf15275b42799c3af8ecb35df4df/artifacts
+end_time: 1753277248130
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 4a00bf15275b42799c3af8ecb35df4df
+run_name: casual-roo-414
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753277151101
+status: 4
+tags: []
+user_id: alex

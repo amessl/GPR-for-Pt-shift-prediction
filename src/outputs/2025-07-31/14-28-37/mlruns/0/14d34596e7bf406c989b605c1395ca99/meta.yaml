@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-28-37/mlruns/0/14d34596e7bf406c989b605c1395ca99/artifacts
+end_time: 1753965069935
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 14d34596e7bf406c989b605c1395ca99
+run_name: angry-cat-806
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753965034336
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/155947267869249554/68c43ea93291439b8a47b4f1b2b4530e/artifacts
+end_time: 1760529640363
+entry_point_name: ''
+experiment_id: '155947267869249554'
+lifecycle_stage: active
+run_id: 68c43ea93291439b8a47b4f1b2b4530e
+run_name: zealous-penguin-729
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760529422166
+status: 3
+tags: []
+user_id: alex

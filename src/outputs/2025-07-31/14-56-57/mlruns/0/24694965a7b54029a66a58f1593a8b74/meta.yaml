@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/24694965a7b54029a66a58f1593a8b74/artifacts
+end_time: 1753968524916
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 24694965a7b54029a66a58f1593a8b74
+run_name: powerful-cub-903
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968487295
+status: 3
+tags: []
+user_id: alex

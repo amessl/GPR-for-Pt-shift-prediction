@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/b8600d82347f427486639dbfb6a936fb/artifacts
+end_time: 1753969842975
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: b8600d82347f427486639dbfb6a936fb
+run_name: gregarious-slug-608
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753969807436
+status: 3
+tags: []
+user_id: alex

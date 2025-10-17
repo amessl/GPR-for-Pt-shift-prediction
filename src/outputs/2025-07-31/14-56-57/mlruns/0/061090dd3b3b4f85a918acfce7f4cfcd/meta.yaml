@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/061090dd3b3b4f85a918acfce7f4cfcd/artifacts
+end_time: 1753971320589
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 061090dd3b3b4f85a918acfce7f4cfcd
+run_name: ambitious-worm-512
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753971285492
+status: 3
+tags: []
+user_id: alex

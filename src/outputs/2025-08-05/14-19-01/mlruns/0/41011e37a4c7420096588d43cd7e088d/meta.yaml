@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-19-01/mlruns/0/41011e37a4c7420096588d43cd7e088d/artifacts
+end_time: 1754396342036
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 41011e37a4c7420096588d43cd7e088d
+run_name: classy-kit-991
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396342031
+status: 3
+tags: []
+user_id: alex

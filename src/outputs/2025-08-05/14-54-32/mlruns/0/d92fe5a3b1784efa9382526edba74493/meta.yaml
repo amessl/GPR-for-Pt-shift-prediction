@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-54-32/mlruns/0/d92fe5a3b1784efa9382526edba74493/artifacts
+end_time: 1754398472987
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d92fe5a3b1784efa9382526edba74493
+run_name: lyrical-donkey-734
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754398472980
+status: 3
+tags: []
+user_id: alex

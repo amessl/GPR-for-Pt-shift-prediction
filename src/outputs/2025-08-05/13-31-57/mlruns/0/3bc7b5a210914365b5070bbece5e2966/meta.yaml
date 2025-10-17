@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/13-31-57/mlruns/0/3bc7b5a210914365b5070bbece5e2966/artifacts
+end_time: 1754393552921
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3bc7b5a210914365b5070bbece5e2966
+run_name: polite-duck-390
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754393517418
+status: 3
+tags: []
+user_id: alex

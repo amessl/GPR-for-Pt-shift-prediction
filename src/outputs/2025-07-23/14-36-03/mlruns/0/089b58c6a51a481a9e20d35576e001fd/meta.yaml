@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/089b58c6a51a481a9e20d35576e001fd/artifacts
+end_time: 1753276949263
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 089b58c6a51a481a9e20d35576e001fd
+run_name: skittish-fly-323
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753276848957
+status: 3
+tags: []
+user_id: alex

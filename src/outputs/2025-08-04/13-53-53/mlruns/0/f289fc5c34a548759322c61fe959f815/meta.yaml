@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-04/13-53-53/mlruns/0/f289fc5c34a548759322c61fe959f815/artifacts
+end_time: 1754308446364
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f289fc5c34a548759322c61fe959f815
+run_name: grandiose-mink-384
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754308434015
+status: 4
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-06/13-46-41/mlruns/0/60ef641485fe403db5fb32157a8cb674/artifacts
+end_time: 1754480968458
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 60ef641485fe403db5fb32157a8cb674
+run_name: bedecked-fly-770
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754480870891
+status: 3
+tags: []
+user_id: alex

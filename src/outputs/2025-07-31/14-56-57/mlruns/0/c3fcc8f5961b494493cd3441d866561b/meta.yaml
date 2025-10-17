@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/c3fcc8f5961b494493cd3441d866561b/artifacts
+end_time: 1753967055853
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c3fcc8f5961b494493cd3441d866561b
+run_name: suave-donkey-324
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753967016728
+status: 3
+tags: []
+user_id: alex

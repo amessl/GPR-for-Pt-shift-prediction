@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/fabaaee9294f4e218538d8b9bfd198f2/artifacts
+end_time: 1753972937571
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: fabaaee9294f4e218538d8b9bfd198f2
+run_name: popular-asp-222
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753972899674
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/155947267869249554/6c11536d7a3a42459eae53c36b11a32f/artifacts
+end_time: 1760529658576
+entry_point_name: ''
+experiment_id: '155947267869249554'
+lifecycle_stage: active
+run_id: 6c11536d7a3a42459eae53c36b11a32f
+run_name: glamorous-stag-437
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760529531969
+status: 3
+tags: []
+user_id: alex

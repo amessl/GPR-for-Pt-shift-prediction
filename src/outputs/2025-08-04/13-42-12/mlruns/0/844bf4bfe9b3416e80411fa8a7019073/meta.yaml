@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-04/13-42-12/mlruns/0/844bf4bfe9b3416e80411fa8a7019073/artifacts
+end_time: 1754307738156
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 844bf4bfe9b3416e80411fa8a7019073
+run_name: crawling-grouse-792
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754307732398
+status: 4
+tags: []
+user_id: alex

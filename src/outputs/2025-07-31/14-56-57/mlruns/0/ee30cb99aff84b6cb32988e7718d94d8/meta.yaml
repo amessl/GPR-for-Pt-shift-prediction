@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/ee30cb99aff84b6cb32988e7718d94d8/artifacts
+end_time: 1753968598688
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: ee30cb99aff84b6cb32988e7718d94d8
+run_name: awesome-mare-365
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968559213
+status: 3
+tags: []
+user_id: alex

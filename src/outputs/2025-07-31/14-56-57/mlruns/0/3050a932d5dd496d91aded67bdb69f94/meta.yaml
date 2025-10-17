@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/3050a932d5dd496d91aded67bdb69f94/artifacts
+end_time: 1753968336094
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3050a932d5dd496d91aded67bdb69f94
+run_name: aged-pig-488
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968297316
+status: 3
+tags: []
+user_id: alex

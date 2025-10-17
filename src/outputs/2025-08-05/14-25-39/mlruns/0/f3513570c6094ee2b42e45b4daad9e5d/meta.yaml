@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-25-39/mlruns/0/f3513570c6094ee2b42e45b4daad9e5d/artifacts
+end_time: 1754396844048
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f3513570c6094ee2b42e45b4daad9e5d
+run_name: zealous-cub-187
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396739200
+status: 3
+tags: []
+user_id: alex

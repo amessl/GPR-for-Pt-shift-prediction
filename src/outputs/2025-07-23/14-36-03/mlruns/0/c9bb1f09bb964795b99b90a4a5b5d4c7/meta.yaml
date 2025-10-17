@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/c9bb1f09bb964795b99b90a4a5b5d4c7/artifacts
+end_time: 1753275081311
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c9bb1f09bb964795b99b90a4a5b5d4c7
+run_name: persistent-yak-911
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753274971065
+status: 3
+tags: []
+user_id: alex

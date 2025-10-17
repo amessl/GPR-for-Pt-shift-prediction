@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/8f1d4a9ac2714bb3a1161dd922bb9a66/artifacts
+end_time: 1753276532181
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 8f1d4a9ac2714bb3a1161dd922bb9a66
+run_name: nervous-colt-615
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753276423978
+status: 3
+tags: []
+user_id: alex

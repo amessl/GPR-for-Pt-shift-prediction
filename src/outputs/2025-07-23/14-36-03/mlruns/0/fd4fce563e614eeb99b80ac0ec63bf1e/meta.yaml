@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-36-03/mlruns/0/fd4fce563e614eeb99b80ac0ec63bf1e/artifacts
+end_time: 1753275593080
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: fd4fce563e614eeb99b80ac0ec63bf1e
+run_name: bittersweet-shoat-10
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753275489813
+status: 3
+tags: []
+user_id: alex

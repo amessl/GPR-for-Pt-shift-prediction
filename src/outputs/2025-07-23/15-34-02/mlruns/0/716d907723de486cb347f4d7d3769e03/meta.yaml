@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/15-34-02/mlruns/0/716d907723de486cb347f4d7d3769e03/artifacts
+end_time: 1753277757202
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 716d907723de486cb347f4d7d3769e03
+run_name: blushing-shark-517
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753277643048
+status: 3
+tags: []
+user_id: alex

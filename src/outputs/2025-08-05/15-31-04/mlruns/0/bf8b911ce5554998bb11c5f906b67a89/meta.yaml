@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-31-04/mlruns/0/bf8b911ce5554998bb11c5f906b67a89/artifacts
+end_time: 1754400745584
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: bf8b911ce5554998bb11c5f906b67a89
+run_name: serious-conch-229
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754400664393
+status: 3
+tags: []
+user_id: alex

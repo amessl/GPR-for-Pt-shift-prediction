@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-56-52/mlruns/0/d195447d5cdd4f6bb9b9e6f1802a8abc/artifacts
+end_time: 1754398612557
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d195447d5cdd4f6bb9b9e6f1802a8abc
+run_name: beautiful-wolf-270
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754398612548
+status: 3
+tags: []
+user_id: alex

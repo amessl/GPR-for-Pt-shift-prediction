@@ -1,0 +1,14 @@
+artifact_uri: /home/alex/Pt_NMR/mlruns/155947267869249554/a3303e264904486fa29ea1f503ac1be7/artifacts
+end_time: 1760529749425
+entry_point_name: ''
+experiment_id: '155947267869249554'
+lifecycle_stage: active
+run_id: a3303e264904486fa29ea1f503ac1be7
+run_name: learned-moose-509
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760529595294
+status: 3
+tags: []
+user_id: alex

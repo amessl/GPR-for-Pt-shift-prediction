@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/2fb12e84d33d48f7a8f6053290f70173/artifacts
+end_time: 1753970150417
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2fb12e84d33d48f7a8f6053290f70173
+run_name: monumental-horse-831
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753970114209
+status: 3
+tags: []
+user_id: alex

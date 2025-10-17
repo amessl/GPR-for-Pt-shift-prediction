@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/72147b8720444d2e89da2b1c9fe4a13c/artifacts
+end_time: 1753969996563
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 72147b8720444d2e89da2b1c9fe4a13c
+run_name: exultant-finch-642
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753969956368
+status: 3
+tags: []
+user_id: alex

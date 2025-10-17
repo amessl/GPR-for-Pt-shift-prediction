@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-19-01/mlruns/0/075817c26b934eb795ff88905f789cd5/artifacts
+end_time: 1754396342008
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 075817c26b934eb795ff88905f789cd5
+run_name: puzzled-hog-164
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396342003
+status: 3
+tags: []
+user_id: alex

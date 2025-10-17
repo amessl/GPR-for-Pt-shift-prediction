@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-06/14-47-30/mlruns/286282686613118146/8d3cce77c0c84d83a95b58444ce47990/artifacts
+end_time: 1754484755733
+entry_point_name: ''
+experiment_id: '286282686613118146'
+lifecycle_stage: active
+run_id: 8d3cce77c0c84d83a95b58444ce47990
+run_name: illustrious-crab-187
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754484450858
+status: 3
+tags: []
+user_id: alex

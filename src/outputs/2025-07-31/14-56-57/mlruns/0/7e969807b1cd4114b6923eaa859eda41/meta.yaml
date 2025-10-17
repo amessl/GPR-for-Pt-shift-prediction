@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/7e969807b1cd4114b6923eaa859eda41/artifacts
+end_time: 1753967016714
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 7e969807b1cd4114b6923eaa859eda41
+run_name: respected-seal-155
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753966978595
+status: 3
+tags: []
+user_id: alex

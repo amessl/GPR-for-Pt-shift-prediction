@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-23/14-29-57/mlruns/0/547ff9ee201747bfb9ec8986c370a3b3/artifacts
+end_time: 1753273967122
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 547ff9ee201747bfb9ec8986c370a3b3
+run_name: defiant-frog-614
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753273897908
+status: 4
+tags: []
+user_id: alex

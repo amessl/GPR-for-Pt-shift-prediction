@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/16-03-55/mlruns/0/187652f6a013413eba844d7e75a6a853/artifacts
+end_time: 1754403926302
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 187652f6a013413eba844d7e75a6a853
+run_name: charming-turtle-840
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754403918040
+status: 3
+tags: []
+user_id: alex

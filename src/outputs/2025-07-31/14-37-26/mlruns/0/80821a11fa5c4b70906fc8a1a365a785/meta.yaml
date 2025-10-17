@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-37-26/mlruns/0/80821a11fa5c4b70906fc8a1a365a785/artifacts
+end_time: 1753965479035
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 80821a11fa5c4b70906fc8a1a365a785
+run_name: defiant-ape-582
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753965446179
+status: 3
+tags: []
+user_id: alex

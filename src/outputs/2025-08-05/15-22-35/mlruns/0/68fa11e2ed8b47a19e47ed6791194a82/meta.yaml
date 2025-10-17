@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-22-35/mlruns/0/68fa11e2ed8b47a19e47ed6791194a82/artifacts
+end_time: 1754400156169
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 68fa11e2ed8b47a19e47ed6791194a82
+run_name: industrious-swan-665
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754400156163
+status: 3
+tags: []
+user_id: alex

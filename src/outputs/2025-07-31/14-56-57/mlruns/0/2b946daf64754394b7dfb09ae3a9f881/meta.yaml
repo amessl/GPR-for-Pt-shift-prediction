@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/2b946daf64754394b7dfb09ae3a9f881/artifacts
+end_time: 1753970913465
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2b946daf64754394b7dfb09ae3a9f881
+run_name: serious-deer-840
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753970877334
+status: 3
+tags: []
+user_id: alex

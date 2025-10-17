@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/dfd2e1d392c64e9b94765683bc7d6ae1/artifacts
+end_time: 1753967207532
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: dfd2e1d392c64e9b94765683bc7d6ae1
+run_name: salty-sloth-140
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753967170672
+status: 3
+tags: []
+user_id: alex

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/84c3e19a00b74c31b21da2c536648309/artifacts
+end_time: 1753971956540
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 84c3e19a00b74c31b21da2c536648309
+run_name: funny-dog-552
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753971919816
+status: 3
+tags: []
+user_id: alex

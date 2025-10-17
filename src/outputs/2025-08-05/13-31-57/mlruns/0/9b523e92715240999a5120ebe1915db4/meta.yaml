@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/13-31-57/mlruns/0/9b523e92715240999a5120ebe1915db4/artifacts
+end_time: 1754393587345
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 9b523e92715240999a5120ebe1915db4
+run_name: classy-snail-70
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754393552940
+status: 3
+tags: []
+user_id: alex

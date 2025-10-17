@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-22-29/mlruns/0/46c68e80aa3c47c68542c394028bd317/artifacts
+end_time: 1754396550010
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 46c68e80aa3c47c68542c394028bd317
+run_name: rumbling-shad-949
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396550005
+status: 3
+tags: []
+user_id: alex

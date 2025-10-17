@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/15-31-04/mlruns/0/6ef2db21e9b746db858e11736748c23c/artifacts
+end_time: 1754400859052
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 6ef2db21e9b746db858e11736748c23c
+run_name: abrasive-foal-416
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754400745620
+status: 3
+tags: []
+user_id: alex

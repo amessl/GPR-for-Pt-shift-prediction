@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-07-31/14-56-57/mlruns/0/323e375dbea647df839a446e85ff26a8/artifacts
+end_time: 1753968744500
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 323e375dbea647df839a446e85ff26a8
+run_name: unleashed-ram-734
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1753968706516
+status: 3
+tags: []
+user_id: alex

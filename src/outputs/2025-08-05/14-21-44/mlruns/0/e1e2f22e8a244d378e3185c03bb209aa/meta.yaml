@@ -1,0 +1,14 @@
+artifact_uri: file:///home/alex/Pt_NMR/src/outputs/2025-08-05/14-21-44/mlruns/0/e1e2f22e8a244d378e3185c03bb209aa/artifacts
+end_time: 1754396508361
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e1e2f22e8a244d378e3185c03bb209aa
+run_name: luxuriant-yak-687
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754396504717
+status: 4
+tags: []
+user_id: alex
