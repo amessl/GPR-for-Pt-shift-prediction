@@ -118,7 +118,7 @@ class DataLoader(BaseConfig):
                     X_data, X_holdout = gen.get_APE_RF_partitioned()
 
                 else:
-                    X_data = gen.get_APE_RF()
+                    X_data = gen.get_APE_RF(path_index=2) # TODO: remove training on whole set for all (not needed)
 
             elif self.descriptor_type == 'ChEAP':
 
