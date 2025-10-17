@@ -6,28 +6,95 @@ import os
 
 
 class AtomPropsDist(BaseConfig):
+    """
+    Utilities for interatomic analysis around a central atom.
+
+    This class loads XYZ structures, identifies the central atom's neighbors
+    using a simple van-der-Waals cutoff, and retrieves (mean) atomic property
+    values from an external JSON database.
+
+    Parameters
+    ----------
+    config : omegaconf.DictConfig | dict
+        Configuration object consumed by :class:`BaseConfig`. Must define, at
+        minimum, paths to XYZ files (``xyz_path``), the symbol of the central
+        atom (``central_atom``), and the path to the atomic-properties JSON
+        file (``ap_path``).
+
+    Attributes
+    ----------
+    ap_path : str | pathlib.Path
+        Path to the atomic properties JSON file.
+    xyz_path : list[str]
+        One or more directories containing XYZ files (inherited from
+        :class:`BaseConfig`).
+    central_atom : str
+        Symbol of the central atom (inherited from :class:`BaseConfig`).
+
+    See Also
+    --------
+    BaseConfig
+        Parent class that provides common configuration and path handling.
+    """
+
+
     def __init__(self, config):
         """
-        Initialize class for getting interatomic distances, neighbors of central atom and (mean) atomic properties
-
+        Initialize the interatomic analysis helper.
         """
         super().__init__(config)
         self.ap_path = config.ap_path
 
-
     def get_adjacent_atoms_xyz(self, filename, path_index):
 
         """
-        Get direct neighbor atoms of the central atom from cartesian (XYZ) atomic coordinates.
+        Identify neighbor atoms of the central atom from XYZ coordinates.
 
-        :return:
-        List of neighbor atoms, mean distance of the central atom to the neighbor atoms,
-        list of the distances of the central atom to its neighbor atoms,
-        list of distances of the central atom to all other atoms,
-        list of atomic symbols of the neighbor atoms,
-        XYZ coordinates of the central atom,
-        list of XYZ coordinates of the neighbor atoms
+        Neighboring atoms are defined via a vdW-like cutoff:
+        ``1.3 * (r_neighbor + r_central)`` using radii from the atomic
+        properties JSON.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the XYZ file to read.
+        path_index : int
+            Index into :attr:`xyz_path` selecting which directory contains
+            ``filename``.
+
+        Returns
+        -------
+        neighbors : list[str]
+            Atomic symbols of identified neighbor atoms (order corresponds to
+            ``neighbor_distance_list`` below).
+        distances_to_central : list[float]
+            Distances (Å) from the central atom to **all** non-central atoms in
+            the molecule, in the same order as ``adjacent_atom_symbol_list``.
+        adjacent_atom_symbol_list : list[str]
+            Atomic symbols of **all** non-central atoms (not only neighbors).
+        central_atom_coords : numpy.ndarray
+            XYZ coordinates of the central atom, shape ``(3,)``.
+        adjacent_atom_coords_list : list[numpy.ndarray]
+            XYZ coordinates of all non-central atoms, each of shape ``(3,)``.
+
+        Raises
+        ------
+        KeyError
+            If an atomic symbol encountered in the XYZ file is missing from the
+            atomic properties JSON.
+        FileNotFoundError
+            If the XYZ file cannot be found at the constructed path.
+        ValueError
+            If the central atom is not present in the XYZ file.
+
+        Notes
+        -----
+        The returned tuple is intentionally minimal; if you need per-neighbor
+        distances, you can compute them by selecting elements of
+        ``distances_to_central`` at indices corresponding to entries in
+        ``neighbors`` within ``adjacent_atom_symbol_list``.
         """
+
         path = os.path.join(self.xyz_path[path_index], filename)
 
         with open(path, 'r') as xyz_file:
@@ -86,15 +153,34 @@ class AtomPropsDist(BaseConfig):
 
 
     def get_qmol(self, filename, path_index):
-
         """
-        Obtain the molecular charge (qmol) from the xyz-file.
-        The qmol value ($qmol \in \mathbb{Z}$) is assumed to be
-        included in the second line of each xyz-file
+        Read the integer molecular charge (qmol) from an XYZ file.
 
-        :return:
-        Integer value of molecular charge (qmol)
+        The qmol value is expected on the **second** line of the XYZ file
+        (following the atom count line) and will be rounded to the nearest
+        integer if written as a float.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the XYZ file to read.
+        path_index : int
+            Index into :attr:`xyz_path` selecting which directory contains
+            ``filename``.
+
+        Returns
+        -------
+        int
+            Molecular charge ``qmol`` as an integer.
+
+        Raises
+        ------
+        ValueError
+            If the second line does not contain a numeric charge.
+        FileNotFoundError
+            If the XYZ file cannot be found at the constructed path.
         """
+
         path = os.path.join(self.xyz_path[path_index], filename)
         with open(path, 'r') as xyz_file:
             qmol_line = xyz_file.readlines()[1]
@@ -109,14 +195,26 @@ class AtomPropsDist(BaseConfig):
         return int_qmol
 
     def get_central_atom_props(self, target):
-
         """
-        Get the atomic properties from atomic_props.json only for the central
-        atom as specified when creating an instance of the AtomPropsDist class.
+        Retrieve a property value for the central atom from the JSON database.
 
-        :param target: Name (str) of the target property to obtain for the central atom
+        Parameters
+        ----------
+        target : {'pauling_EN', 'atomic_radius', 'nuclear_charge'}
+            Name of the property to query for the central atom.
 
-        :return: Value of the atomic property
+        Returns
+        -------
+        float
+            The requested property value for the central atom.
+
+        Raises
+        ------
+        ValueError
+            If ``target`` is not one of the supported properties.
+        Exception
+            If the central atom is missing from the JSON or the property is not
+            defined for that atom.
         """
 
         props = ['pauling_EN', 'atomic_radius', 'nuclear_charge']
@@ -141,30 +239,30 @@ class AtomPropsDist(BaseConfig):
     def get_atomic_properties(self, fmt, target, mode, filename, path_index):
 
         """
-            Get atomic property values for neighbor or all atoms around the central atom.
+        Get atomic property values for neighbor or all atoms around the central atom.
 
-            Parameters
-            ----------
-            fmt : {'xyz'}
-                Structure fmt.
-            target : str
-                One of: 'pauling_EN', 'atomic_radius', 'nuclear_charge',
-            mode : {'neighbors','all'}
-                Whether to use only neighbor atoms or all atoms (excluding the central atom).
-            filename : str
-                XYZ file name.
-            path_index : int
-                Index into self.xyz_path.
+        Parameters
+        ----------
+        fmt : {'xyz'}
+            Structure fmt.
+        target : str
+            One of: 'pauling_EN', 'atomic_radius', 'nuclear_charge',
+        mode : {'neighbors','all'}
+            Whether to use only neighbor atoms or all atoms (excluding the central atom).
+        filename : str
+            XYZ file name.
+        path_index : int
+            Index into self.xyz_path.
 
-            Returns
-            -------
-            prop_list : list[float]
-                Property values in the same order as selected atoms.
-            mean_prop : float
-                Mean of the property values (NaN if no atoms selected).
-            valency : int
-                Number of atoms used (neighbors if mode='neighbors', else all non-central atoms).
-            """
+        Returns
+        -------
+        prop_list : list[float]
+            Property values in the same order as selected atoms.
+        mean_prop : float
+            Mean of the property values (NaN if no atoms selected).
+        valency : int
+            Number of atoms used (neighbors if mode='neighbors', else all non-central atoms).
+        """
 
         allowed_props = ['pauling_EN', 'atomic_radius', 'nuclear_charge']
 
