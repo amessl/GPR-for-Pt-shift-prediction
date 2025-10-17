@@ -19,14 +19,14 @@ class GenDescriptors(BaseConfig):
         super().__init__(config)
 
 
-    def get_APE_RF(self, format='xyz', mode='all', smooth_cutoff=False, path_index=0, normalize=False):
+    def get_APE_RF(self, fmt='xyz', mode='all', smooth_cutoff=False, path_index=0, normalize=False):
 
         """
         Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
         of electronegativity, atomic radius and nuclear charge. Molecular charge is included by substracting
         it from the nuclear charge of the central atom.
 
-        :param format: Whether to read structure from SMILES-file (currently not supported) or xyz_file (default)
+        :param fmt: Whether to read structure from SMILES-file (currently not supported) or xyz_file (default)
         :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms (default)
         Order of descriptor params: [r_cut, dim]
 
@@ -47,9 +47,9 @@ class GenDescriptors(BaseConfig):
 
             qmol = apd.get_qmol(xyz_filename, path_index)
 
-            EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format, filename=xyz_filename, path_index=path_index)[0]
-            atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format, filename=xyz_filename, path_index=path_index)[0]
-            charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format,filename=xyz_filename, path_index=path_index)[0]
+            EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, fmt=fmt, filename=xyz_filename, path_index=path_index)[0]
+            atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, fmt=fmt, filename=xyz_filename, path_index=path_index)[0]
+            charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, fmt=fmt,filename=xyz_filename, path_index=path_index)[0]
 
             central_atom_distances = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[1]
             adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[4]
@@ -106,7 +106,7 @@ class GenDescriptors(BaseConfig):
         partitioned_data = []
 
         for path_index in range(0, len(self.xyz_path)):
-            subset = self.get_APE_RF(format='xyz', mode='all', path_index=path_index)
+            subset = self.get_APE_RF(fmt='xyz', mode='all', path_index=path_index)
 
             partitioned_data.append(subset)
 
@@ -231,7 +231,7 @@ class GenDescriptors(BaseConfig):
 
         return partitioned_data
 
-    def get_SIF(self, target_list, path_index=0, format='xyz', mode='neighbors', normalize=False):
+    def get_SIF(self, target_list, path_index=0, fmt='xyz', mode='neighbors', normalize=False):
 
         SIF_dataset = []
 
@@ -252,11 +252,11 @@ class GenDescriptors(BaseConfig):
                     feature_vector.append(apd.get_qmol(filename=xyz_filename, path_index=path_index))
 
                 elif target == 'valency':
-                    feature_vector.append(apd.get_atomic_properties(target='pauling_EN', mode=mode, format=format,
+                    feature_vector.append(apd.get_atomic_properties(target='pauling_EN', mode=mode, fmt=fmt,
                                                                     filename=xyz_filename, path_index=path_index)[2])
 
                 else:
-                    feature_vector.append(apd.get_atomic_properties(target=target, mode=mode, format=format,
+                    feature_vector.append(apd.get_atomic_properties(target=target, mode=mode, fmt=fmt,
                                                                     filename=xyz_filename, path_index=path_index)[1])
 
             SIF_vec = np.array(feature_vector, dtype=float)
@@ -283,7 +283,7 @@ class GenDescriptors(BaseConfig):
         partitioned_data = []
 
         for path_index in range(0, len(self.xyz_path)):
-            subset = self.get_SIF(target_list, path_index, format='xyz', mode='neighbors')  # Here was a [0] 26.08. 23:16 ?
+            subset = self.get_SIF(target_list, path_index, fmt='xyz', mode='neighbors')  # Here was a [0] 26.08. 23:16 ?
             partitioned_data.append(subset)
 
 

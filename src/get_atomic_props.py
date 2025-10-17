@@ -1,6 +1,4 @@
 import numpy as np
-from rdkit import Chem
-from rdkit.Chem import AllChem
 import json
 import statistics
 from base import BaseConfig
@@ -12,7 +10,6 @@ class AtomPropsDist(BaseConfig):
         """
         Initialize class for getting interatomic distances, neighbors of central atom and (mean) atomic properties
 
-        :param smiles_path: path to the smiles-file
         """
         super().__init__(config)
         self.ap_path = config.ap_path
@@ -122,9 +119,7 @@ class AtomPropsDist(BaseConfig):
         :return: Value of the atomic property
         """
 
-        props = ['pauling_EN', 'atomic_radius',
-                 'nuclear_charge', 'ionization_potential',
-                 'electron_affinity', 'polarizability', 'vdw_radius']
+        props = ['pauling_EN', 'atomic_radius', 'nuclear_charge']
 
         with open(self.ap_path) as ap_data_file:
             ap_data = json.load(ap_data_file)
@@ -143,35 +138,43 @@ class AtomPropsDist(BaseConfig):
 
         return atomic_property
 
-    def get_atomic_properties(self, format, target, mode, filename, path_index):
+    def get_atomic_properties(self, fmt, target, mode, filename, path_index):
 
         """
-        Get atomic properties of the neighbor atoms of the central atom for a molecule.
-        The atomic properties are stored in the JSON file 'atomic_props.json'
+            Get atomic property values for neighbor or all atoms around the central atom.
 
-        :param format: Whether to use xyz- or SMILES-files to read the structure
-                       (Specify as 'xyz' or 'smiles')
-        :param target: Atomic property of interest ('pauling_EN' for electronegativity,
-                       'atomic_radius', 'nuclear_charge', 'ionization_potential',
-                       'electron_affinity','polarizability' or 'vdw_radius'
-                        for the van-der-Waals radius)
-        :param mode: get atomic properties only of the neighbor atoms ('neighbors') or
-                     all atoms ('all')
+            Parameters
+            ----------
+            fmt : {'xyz'}
+                Structure fmt.
+            target : str
+                One of: 'pauling_EN', 'atomic_radius', 'nuclear_charge',
+            mode : {'neighbors','all'}
+                Whether to use only neighbor atoms or all atoms (excluding the central atom).
+            filename : str
+                XYZ file name.
+            path_index : int
+                Index into self.xyz_path.
 
-        :return:
-        List of the atomic properties for each atom, mean value of the property
-        and coordination number of the central atom.
+            Returns
+            -------
+            prop_list : list[float]
+                Property values in the same order as selected atoms.
+            mean_prop : float
+                Mean of the property values (NaN if no atoms selected).
+            valency : int
+                Number of atoms used (neighbors if mode='neighbors', else all non-central atoms).
+            """
 
-        """
+        allowed_props = ['pauling_EN', 'atomic_radius', 'nuclear_charge']
 
-        props = ['pauling_EN', 'atomic_radius',
-                 'nuclear_charge', 'ionization_potential',
-                 'electron_affinity', 'polarizability', 'vdw_radius']
+        if target not in allowed_props:
+            raise ValueError(f"Target property '{target}' is not supported. Supported: {sorted(allowed_props)}")
 
         with open(self.ap_path) as ap_data_file:
             ap_data = json.load(ap_data_file)
 
-        if format == 'xyz' and self.xyz_path is not None:
+        if fmt == 'xyz' and self.xyz_path is not None:
 
             if mode == 'neighbors':
                 adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[0]
@@ -179,89 +182,15 @@ class AtomPropsDist(BaseConfig):
             elif mode == 'all':
                 adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[2]
 
-        elif format == 'smiles' and self.smiles_path is not None:
-            adjacent_atoms_list = self.get_adjacent_atoms_smiles()[2]
+            else:
+                raise ValueError(f"Unknown mode '{mode}'. Supported: 'all' or 'neighbors'.")
 
         else:
-            raise ValueError("Specify 'format' as either 'xyz' or 'smiles'")
+            raise ValueError(f"Unknown fmt: {fmt}. Supported: 'xyz'")
 
-        prop_list = []
 
-        if target == props[0]:
-
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[0]]
-                    prop_list.append(atomic_property)
-
-                    if not adjacent_atoms_list:
-                        prop_list.append(0)
-                else:
-                    raise Exception(f"Neighboring atom {atom_symbol} not included in atomic properties JSON file.")
-
-            mean_prop = statistics.mean(prop_list)
-
-        elif target == props[1]:
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[1]]
-                    prop_list.append(atomic_property)
-                else:
-                    raise Exception(f"Neighboring atom '{atom_symbol}' not included in atomic properties JSON file.")
-            mean_prop = statistics.mean(prop_list)
-
-        elif target == props[2]:
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[2]]
-                    prop_list.append(atomic_property)
-                else:
-                    raise Exception(f"Neighboring atom {atom_symbol} not included in atomic properties JSON file.")
-
-            mean_prop = statistics.mean(prop_list)
-
-        elif target == props[3]:
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[3]]
-                    prop_list.append(atomic_property)
-                else:
-                    raise Exception(f"Neighboring atom {atom_symbol} not included in atomic properties JSON file.")
-
-            mean_prop = statistics.mean(prop_list)
-
-        elif target == props[4]:
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[4]]
-                    prop_list.append(atomic_property)
-                else:
-                    raise Exception(f"Neighboring atom {atom_symbol} not included in atomic properties JSON file.")
-
-            mean_prop = statistics.mean(prop_list)
-
-        elif target == props[5]:
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[5]]
-                    prop_list.append(atomic_property)
-                else:
-                    raise Exception(f"Neighboring atom {atom_symbol} not included in atomic properties JSON file.")
-
-            mean_prop = statistics.mean(prop_list)
-
-        elif target == props[6]:
-            for atom_symbol in adjacent_atoms_list:
-                if atom_symbol in ap_data:
-                    atomic_property = ap_data[atom_symbol][props[6]]
-                    prop_list.append(atomic_property)
-                else:
-                    raise Exception(f"Neighboring atom {atom_symbol} not included in atomic properties JSON file.")
-
-            mean_prop = statistics.mean(prop_list)
-
-        else:
-            raise ValueError(f"Target property '{target}' is not supported. Supported properties: \n {props}")
+        prop_list = [ap_data[atom_symb][target] for atom_symb in adjacent_atoms_list]
+        mean_prop = statistics.mean(prop_list)
 
         valency = len(prop_list)
 
