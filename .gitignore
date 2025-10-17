@@ -1,11 +1,12 @@
 # Ignore local scripts
-/home/alex/Pt_NMR/src/SOAP_analysis.ipynb
-/home/alex/Pt_NMR/src/plots.ipynb
-/home/alex/Pt_NMR/src/sync_mlruns.sh
-/home/alex/Pt_NMR/src/utils.py
-/home/alex/Pt_NMR/mlruns/
-/home/alex/Pt_NMR/mlruns_cluster/
-/home/alex/Pt_NMR/outputs/
+src/SOAP_analysis.ipynb
+src/plots.ipynb
+src/sync_mlruns.sh
+src/utils.py
+mlruns/
+mlruns_cluster/
+outputs/
+
 
 # Ignore virtual environment
 .venv/
