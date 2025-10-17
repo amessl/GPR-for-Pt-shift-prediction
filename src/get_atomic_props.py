@@ -40,17 +40,18 @@ class AtomPropsDist(BaseConfig):
         adjacent_atom_symbol_list = []
 
         for line in lines:
+            parts = line.split()
+            if not parts:
+                continue
 
-            if self.central_atom in line:
-                elements = line.split()
-                central_atom_coords = np.array([float(elements[1]), float(elements[2]), float(elements[3])])
+            symbol = parts[0]
+
+            if symbol == self.central_atom:
+                central_atom_coords = np.array([float(parts[1]), float(parts[2]), float(parts[3])])
 
             else:
-                adjacent_elements = line.split()
-                adjacent_atom_symbol = adjacent_elements[0]
-                adjacent_atom_symbol_list.append(adjacent_atom_symbol)
-                adjacent_atom_coords = np.array(
-                    [float(adjacent_elements[1]), float(adjacent_elements[2]), float(adjacent_elements[3])])
+                adjacent_atom_symbol_list.append(symbol)
+                adjacent_atom_coords = np.array([float(parts[1]), float(parts[2]), float(parts[3])])
                 adjacent_atom_coords_list.append(adjacent_atom_coords)
 
         distance_list = []
@@ -73,15 +74,17 @@ class AtomPropsDist(BaseConfig):
                     'atomic_radius'] * 1.3
                 atomic_radii_sum_A = atomic_radii_sum
 
-            if atomic_radii_sum_A > distance_list[index]:
-                xyz_neighbor_list.append(adjacent_atom_symbol_list[index])
-                xyz_neighbor_set.add(adjacent_atom_symbol_list[index])
-                neighbor_distance_list.append(distance_list[index])
-                mean_distance = statistics.mean(neighbor_distance_list)
+                if atomic_radii_sum_A > distance_list[index]:
+                    xyz_neighbor_list.append(adjacent_atom_symbol_list[index])
+                    xyz_neighbor_set.add(adjacent_atom_symbol_list[index])
+                    neighbor_distance_list.append(distance_list[index])
+
+            else:
+                raise KeyError(f"Symbol '{symbol}' not found in atomic properties data.")
 
 
-        return xyz_neighbor_list, mean_distance, neighbor_distance_list, distance_list, \
-            adjacent_atom_symbol_list, central_atom_coords, adjacent_atom_coords_list, xyz_neighbor_set
+        return (xyz_neighbor_list, distance_list, adjacent_atom_symbol_list,
+                central_atom_coords, adjacent_atom_coords_list)
 
 
     def get_qmol(self, filename, path_index):
@@ -173,7 +176,7 @@ class AtomPropsDist(BaseConfig):
                 adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[0]
 
             elif mode == 'all':
-                adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[4]
+                adjacent_atoms_list = self.get_adjacent_atoms_xyz(filename, path_index)[2]
 
         elif format == 'smiles' and self.smiles_path is not None:
             adjacent_atoms_list = self.get_adjacent_atoms_smiles()[2]
