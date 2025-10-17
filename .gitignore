@@ -3,9 +3,18 @@ src/SOAP_analysis.ipynb
 src/plots.ipynb
 src/sync_mlruns.sh
 src/utils.py
+src/analysis.ipynb
+src/outputs
 mlruns/
 mlruns_cluster/
 outputs/
+data/representations
+data/fits
+data/benchmark/representations
+data/benchmark/fits
+data/structures/old
+data/labels/old
+paper/
 
 
 # Ignore virtual environment
