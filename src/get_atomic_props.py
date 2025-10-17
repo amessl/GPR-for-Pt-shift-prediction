@@ -8,49 +8,14 @@ import os
 
 
 class AtomPropsDist(BaseConfig):
-    def __init__(self, config, smiles_path=None):
+    def __init__(self, config):
         """
         Initialize class for getting interatomic distances, neighbors of central atom and (mean) atomic properties
 
         :param smiles_path: path to the smiles-file
         """
         super().__init__(config)
-        self.smiles_path = smiles_path
 
-    def get_adjacent_atoms_smiles(self):
-        """
-        Get direct neighbor atoms of the central atom from SMILES representation.
-
-        :return:
-        Dictionary of neighbor atoms and corresponding atomic indices,
-        list of atomic indices of neighbor atoms and list of symbols of the neighbor atoms.
-        """
-
-        mol = Chem.MolFromSmiles(self.smiles_path)
-
-        atom_indices = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == self.central_atom]
-
-        adjacent_atoms = {}
-        adjacent_atoms_symbols = []
-        adjacent_atoms_indices = []
-
-        for atom_index in atom_indices:
-            atom = mol.GetAtomWithIdx(atom_index)
-            neighbors = atom.GetNeighbors()
-
-        for neighbor in neighbors:
-            neighbor_symbol = neighbor.GetSymbol()
-            adjacent_atoms_symbols.append(neighbor_symbol)
-            adjacent_atom_index = neighbor.GetIdx()
-            adjacent_atoms_indices.append(adjacent_atom_index)
-            if neighbor_symbol in adjacent_atoms:
-                adjacent_atoms[neighbor_symbol] += 1
-            else:
-                adjacent_atoms[neighbor_symbol] = 1
-
-        adjacent_atoms = {k: v for k, v in sorted(adjacent_atoms.items())}
-
-        return adjacent_atoms, adjacent_atoms_indices, adjacent_atoms_symbols
 
     def get_adjacent_atoms_xyz(self, filename, path_index):
 
@@ -118,55 +83,6 @@ class AtomPropsDist(BaseConfig):
         return xyz_neighbor_list, mean_distance, neighbor_distance_list, distance_list, \
             adjacent_atom_symbol_list, central_atom_coords, adjacent_atom_coords_list, xyz_neighbor_set
 
-    def get_distances_smiles(self, max_valency):
-        """
-
-        Get distances of the central atom to its neighbor atoms from a SMILES representation.
-        3D structure is obtained from the SMILES string via embedding and subsequent MMFF optimization.
-
-        :return:
-        mean distance of the central atom to its neighbor atoms and list of the individual distances.
-        """
-
-        mol = Chem.MolFromSmiles(self.smiles_path)
-        mol = Chem.AddHs(mol)
-
-        try:
-            AllChem.EmbedMolecule(mol)
-        except Exception as e:
-            print(e)
-
-        try:
-            AllChem.MMFFOptimizeMolecule(mol)
-        except Exception as e:
-            print(e)
-
-        conformer = mol.GetConformer(0)
-        positions = conformer.GetPositions()
-
-        central_atom_index = None
-
-        for atom in mol.GetAtoms():
-            if atom.GetSymbol() == self.central_atom:
-                central_atom_index = atom.GetIdx()
-
-        distances = []
-
-        central_atom_pos = positions[central_atom_index]
-
-        adjacent_atoms_indices = self.get_adjacent_atoms_smiles()[1]
-
-        for adjacent_atom_index in adjacent_atoms_indices:
-            neighbor_pos = positions[adjacent_atom_index]
-            distance = np.linalg.norm(np.subtract(central_atom_pos, neighbor_pos))
-            distances.append(distance)
-        if len(distances) < max_valency:
-            distances.extend([0] * (max_valency - len(distances)))
-
-        distances_no_zeroes = [value for value in distances if value != 0]
-        mean_distance = statistics.mean(distances_no_zeroes)
-
-        return mean_distance, distances
 
     def get_qmol(self, filename, path_index):
 
