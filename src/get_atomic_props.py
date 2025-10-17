@@ -15,6 +15,7 @@ class AtomPropsDist(BaseConfig):
         :param smiles_path: path to the smiles-file
         """
         super().__init__(config)
+        self.ap_path = config.ap_path
 
 
     def get_adjacent_atoms_xyz(self, filename, path_index):
@@ -65,7 +66,7 @@ class AtomPropsDist(BaseConfig):
         neighbor_distance_list = []
 
 
-        with open('/home/alex/Pt_NMR/src/atomic_props.json') as ap_data_file:
+        with open(self.ap_path) as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         for index, symbol in enumerate(adjacent_atom_symbol_list):
@@ -125,7 +126,7 @@ class AtomPropsDist(BaseConfig):
                  'nuclear_charge', 'ionization_potential',
                  'electron_affinity', 'polarizability', 'vdw_radius']
 
-        with open('/home/alex/Pt_NMR/src/atomic_props.json') as ap_data_file:
+        with open(self.ap_path) as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         atom_symbol = self.central_atom
@@ -167,7 +168,7 @@ class AtomPropsDist(BaseConfig):
                  'nuclear_charge', 'ionization_potential',
                  'electron_affinity', 'polarizability', 'vdw_radius']
 
-        with open('/home/alex/Pt_NMR/src/atomic_props.json') as ap_data_file:
+        with open(self.ap_path) as ap_data_file:
             ap_data = json.load(ap_data_file)
 
         if format == 'xyz' and self.xyz_path is not None:

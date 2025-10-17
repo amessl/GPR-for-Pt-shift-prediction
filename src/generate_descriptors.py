@@ -38,7 +38,7 @@ class GenDescriptors(BaseConfig):
         APE_RF_dataset = []
         xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        APE_RF_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(param) for param in self.descriptor_params))
+        APE_RF_path = os.path.join(self.descriptor_path[path_index], '_'.join(param for param in self.descriptor_params))
 
         os.makedirs(APE_RF_path, exist_ok=True)
 
@@ -51,10 +51,10 @@ class GenDescriptors(BaseConfig):
             atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, format=format, filename=xyz_filename, path_index=path_index)[0]
             charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, format=format,filename=xyz_filename, path_index=path_index)[0]
 
-            central_atom_distances = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[3]
-            adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[6]
+            central_atom_distances = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[1]
+            adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[4]
 
-            central_atom_coord = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[5]
+            central_atom_coord = apd.get_adjacent_atoms_xyz(filename=xyz_filename, path_index=path_index)[3]
             central_atom_charge = apd.get_central_atom_props(target='nuclear_charge')
             central_atom_EN = apd.get_central_atom_props(target='pauling_EN')
             central_atom_radius = apd.get_central_atom_props(target='atomic_radius')
@@ -169,7 +169,7 @@ class GenDescriptors(BaseConfig):
         # Setting up SOAPs with DScribe library
         SOAP_dataset = []
 
-        descriptor_folder = '_'.join([str(param) for param in self.descriptor_params])
+        descriptor_folder = '_'.join(param for param in self.descriptor_params)
         SOAP_path = os.path.join(self.descriptor_path[path_index], descriptor_folder)
 
         os.makedirs(SOAP_path, exist_ok=True)
@@ -237,7 +237,7 @@ class GenDescriptors(BaseConfig):
 
         xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        SIF_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(param) for param in self.descriptor_params))
+        SIF_path = os.path.join(self.descriptor_path[path_index], '_'.join(self.descriptor_params[param] for param in self.descriptor_params))
 
         os.makedirs(SIF_path, exist_ok=True)
 
