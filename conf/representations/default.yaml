@@ -9,11 +9,11 @@ ChEAP_paths:
   - ${data_root}/representations/SIF/test/
 
 ChEAP_params:
-  - pauling_EN
-  - nuclear_charge
-  - atomic_radius
-  - qmol
-  - valency
+  pauling_EN: EN
+  nuclear_charge: Z 
+  atomic_radius: r 
+  qmol: qmol 
+  valency: val 
 
 rescale_ChEAP: true
 normalize_ChEAP: false
