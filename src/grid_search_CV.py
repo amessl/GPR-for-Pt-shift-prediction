@@ -11,6 +11,14 @@ from multiprocessing import Pool
 
 
 def worker(args):
+    """Worker function for parallel grid search execution.
+
+    Parameters
+    ----------
+    args : tuple
+        Tuple containing (hyperparams_dict, cfg_dict) where hyperparams_dict
+        contains hyperparameter values and cfg_dict is the serialized configuration.
+    """
     hyperparams_dict, cfg_dict = args
     cfg = OmegaConf.create(cfg_dict)
     eval_param_comb(hyperparams_dict, cfg)
@@ -18,6 +26,36 @@ def worker(args):
 
 @hydra.main(config_path="../conf", config_name="config", version_base="1.1")
 def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = True):
+    """Perform grid search over GP and descriptor hyperparameters.
+
+    Executes an exhaustive grid search of descriptor-specific parameters (e.g., SOAP
+    cutoff radius, nmax/lmax). For each iteration over descriptor parameters and kernel degree,
+    the GP hyperparmaeters (noise variance and kernel bias) are optimized using gradient based (L-BFGS)
+    maximization of the log marginal likelihood. Logs all runs to MLflow for comparing model performance
+    in terms of the chosen error metric (MAE in this case).
+
+    Parameters
+    ----------
+    cfg : omegaconf.DictConfig
+        Hydra configuration object containing:
+        - cfg.grid_search.GP_grid : dict
+            Grid of GP hyperparameters to search
+        - cfg.grid_search.SOAP_grid or GAPE_grid : dict
+            Grid of descriptor parameters
+        - cfg.representations.rep : str
+            Descriptor type ('SOAP' or 'GAPE')
+        - cfg.experiment_name : str
+            MLflow experiment name
+    mlflow_ui : bool, optional
+        If True, launch MLflow UI in browser. Default is True.
+    parallel : bool, optional
+        If True, execute grid search in parallel. Default is True.
+
+    Raises
+    ------
+    ValueError
+        If the representation type is not 'SOAP' or 'GAPE'.
+    """
 
     gp_grid = OmegaConf.to_container(cfg.grid_search.GP_grid, resolve=True)
 
@@ -105,6 +143,23 @@ def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = Tr
 
 
 def eval_param_comb(hyperparams_dict: dict, cfg: DictConfig):
+    """Evaluate a single hyperparameter combination.
+
+    Trains a GP model with the specified hyperparameters and logs results
+    to MLflow. Handles failures gracefully by logging infinity or NaN.
+
+    Parameters
+    ----------
+    hyperparams_dict : dict
+        Dictionary of hyperparameter names and values.
+    cfg : omegaconf.DictConfig
+        Hydra configuration object.
+
+    Notes
+    -----
+    Logs train MAE to MLflow. Failed runs log inf (singular kernel matrix) or
+    NaN (other exceptions).
+    """
 
     experiment_name = cfg.experiment_name
     mlflow.set_experiment(experiment_name)

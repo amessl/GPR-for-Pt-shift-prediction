@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import pickle
 import warnings
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -15,12 +14,42 @@ from data_loader import DataLoader
 
 
 class SklearnGPRegressor(BaseConfig):
-    def __init__(self, config):
-        """
-       Initialize class for using descriptors as input for Gaussian Process Regression
-       with cross-validated errors, hyperparameter tuning and visualization of learning curves
+    """Gaussian Process Regressor for molecular property prediction.
 
-       """
+        This class implements GP regression with scikit-learn for predicting NMR
+        chemical shifts from molecular descriptors. Provides training with cross-validation,
+        testing with uncertainty quantification, and visualization of results.
+
+        Parameters
+        ----------
+        config : omegaconf.DictConfig
+            Hydra configuration object containing:
+            - config.mode : str
+                'read' or 'write' for descriptor loading/generation
+            - config.backend.model.target_path : str or list
+                Path(s) to target value CSV files
+            - config.backend.model.fit_path : str
+                Path for saving trained models
+            - All DataLoader configuration parameters
+
+        Attributes
+        ----------
+        data_loader : DataLoader
+            Instance for loading descriptors and targets.
+        mode : str
+            Operating mode ('read' or 'write').
+        target_path : list of str
+            Paths to target CSV files.
+        fit_path : str
+            Directory for saving trained models.
+
+        Notes
+        -----
+        Models are saved as pickle files with suffix '_fit.pkl'.
+        Supports multiple kernel types and hyperparameter optimization.
+        """
+
+    def __init__(self, config):
         super().__init__(config)
 
         self.data_loader = DataLoader(config)
@@ -38,20 +67,42 @@ class SklearnGPRegressor(BaseConfig):
 
     def gpr_train(self, kernel_degree, noise, save_fit=True, stratify_train=True, report=None):
 
-        """
-        Uses the sklearn implementation of Gaussian Process Regression. Defines GPR model with linear/
+        """ Uses the sklearn implementation of Gaussian Process Regression. Defines GPR model with linear/
         polynomial kernel and evaluates a given hyperparameter combination (of the representation and the GPR model)
         on a given dataset using k-fold cross-validation. Provides learning curves for the training and validation set
         and option of optimizing the noise level based on the gradient of the log marginal likelihood (LML) (sklearn backend)
 
-        :param kernel_degree: Degree of the polynomial kernel
-        :param noise: Likelihood variance a. k. a. noise level of the data (is only added to K(X,X) of training points,
-        noise is added to K(X,X) of test points when using WhiteKernel()
-        :param save_fit: Whether to save the state of the fitted model
-        :param stratify_train: Whether the splits in k-fold CV are stratified or not.
-        :param report: Which performance metrics to output. "Errors" for mean errors only and "full" for mean errors and learning curve
+        Parameters
+        ----------
+        kernel_degree : int
+            Degree of the polynomial kernel
+        noise : float
+            Likelihood variance a. k. a. noise variance of the labels (is only added to K(X,X) of training points,
+            noise is added to K(X,X) of test points when using WhiteKernel()
+        save_fit : bool
+            Whether to save the state of the fitted model
+        stratify_train : bool
+            Whether the train/validation splits in k-fold CV are stratified or not.
+        report : str
+            Which performance metrics to output. "Errors" for mean errors only and "full" for mean errors and learning curve
 
-        :return: CV MAE and RMSE and corresponding standard deviations
+        Returns
+        -------
+        train_mae : float
+            Mean cross-validated MAE on the training set.
+        train_mae_std : float
+            Standard deviation of the cross-validated MAE on the training set.
+        train_rmse : float
+            Mean cross-validated RMSE on the training set.
+        train_rmse_std : float
+            Standard deviation of the cross-validated RMSE on the training set.
+        opt_noise : float
+            Optimized noise variance on the whole training set
+
+        Raises
+        ------
+        np.linalg.LinAlgError
+            If kernel matrix is singular.
         """
 
         X_data = self.data_loader.load_samples()[0]
@@ -175,11 +226,44 @@ class SklearnGPRegressor(BaseConfig):
                             f"and displaying learning curves, 'errors' for only"
                             f"printing error table leave at default for no report. \n")
 
+        train_mae = np.mean(np.abs(scores_mae))
+        train_mae_std = np.std(np.abs(scores_mae))
+        train_rmse = np.mean(np.abs(scores_rmse))
+        train_rmse_std = np.std(np.abs(scores_rmse))
 
-        return np.mean(np.abs(scores_mae)), np.std(np.abs(scores_mae)), np.mean(np.abs(scores_rmse)), np.std(
-            np.abs(scores_rmse)), opt_noise
+        return train_mae, train_mae_std, train_rmse, train_rmse_std, opt_noise
 
     def gpr_test(self, kernel_degree, noise, report=None):
+        """Test trained GP model on holdout set.
+
+        Loads a trained GP model and evaluates it on the holdout test set. Computes
+        predictions with uncertainty estimates and optionally generates
+        parity plots and coverage probability.
+
+        Parameters
+        ----------
+        kernel_degree : int
+            Degree of the polynomial kernel.
+        noise : float
+            Likelihood variance a. k. a. noise variance of the labels (is only added to K(X,X) of training points,
+            noise is added to K(X,X) of test points when using WhiteKernel()
+        report : str
+            Which performance metrics to output. "Errors" for mean errors only and "full" for mean errors, parity plots
+            and coverage probability.
+
+        Returns
+        -------
+        mae_test : float
+            Mean absolute error on test set.
+        rmse_test : float
+            Root mean squared error on test set.
+        std_test : float
+            Mean prediction uncertainty (standard deviation).
+
+        Notes
+        -----
+        Requires a trained model saved by gpr_train.
+        """
 
         folder = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
 
@@ -249,6 +333,30 @@ class SklearnGPRegressor(BaseConfig):
 
     @staticmethod
     def _empirical_coverage(predictions, st_devs, target_holdout, z_score=1.96):
+        """Calculate empirical coverage of prediction intervals.
+
+       Computes the fraction of true values within confidence intervals
+       defined by predicted mean ± z * predicted std.
+
+       Parameters
+       ----------
+
+       predictions : list
+            List of predictions on the holdout set.
+       st_devs : list
+            List of predictive standard deviations (uncertainties) on the holdout set.
+       target_holdout : list
+            List of true label values of the holdout set.
+       z_score : float
+            Value of the z-score used to define the confidence interval.
+            Corresponds to nominal coverage probability (1.96 for 95%)
+
+       Returns
+       -------
+       coverage : float
+            Empirical coverage probability of model on the holdout set.
+       """
+
         CI_lower = [pred - (z_score * st_dev) for pred, st_dev in zip(predictions, st_devs)]
         CI_upper = [pred + (z_score * st_dev) for pred, st_dev in zip(predictions, st_devs)]
 
