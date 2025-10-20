@@ -7,32 +7,73 @@ from get_atomic_props import AtomPropsDist
 from base import BaseConfig
 
 class GenDescriptors(BaseConfig):
+    """Generator for molecular descriptors from XYZ structure files.
+
+        This class extends BaseConfig to generate three types of molecular descriptors:
+        - SOAP: Smooth Overlap of Atomic Positions (using the DScribe library)
+        - GAPE: Gaussian Atomic Property Embedding (formerly termed 'APE-RF')
+        - ChEAP: Charge and Environment Averaged Properties (formerly termed 'SIF')
+
+        Parameters
+        ----------
+        config : omegaconf.DictConfig
+            Hydra configuration object containing all parameters from BaseConfig.
+
+        Notes
+        -----
+        XYZ files are expected to follow the naming convention: {xyz_base}{integer}.xyz
+        Generated descriptors are saved as .npy files.
+        """
 
     def __init__(self, config):
+        """Initialize descriptor generator with configuration.
 
-        """
-        Initialize class for generating descriptors (currently only APE_RF and SOAP are supported),
-        Descriptor parameters have to be specified either for SOAP or APE_RF individually when
-        creating an instance of this class. xyz_files are assumed to consist of some basename
-        followed by an integer number ('xyz_base_int.xyz')
+        Parameters
+        ----------
+        config : omegaconf.DictConfig
+            Hydra configuration object.
         """
         super().__init__(config)
 
 
     def get_APE_RF(self, fmt='xyz', mode='all', smooth_cutoff=False, path_index=0, normalize=False):
 
-        """
-        Generate the APE-RF descriptor as sum of atom centered Gaussians weighted by the atomic properties
-        of electronegativity, atomic radius and nuclear charge. Molecular charge is included by substracting
-        it from the nuclear charge of the central atom.
+        """Generate Gaussian Atomic Property Embedding (GAPE, formerly termed APE-RF) descriptor.
 
-        :param fmt: Whether to read structure from SMILES-file (currently not supported) or xyz_file (default)
-        :param mode: generate APE-RF only up to the neighbor atoms ('neighbors') or for all atoms (default)
-        Order of descriptor params: [r_cut, dim]
+        Generates the GAPE descriptor as sum of atom-centered Gaussians weighted by
+        the rescaled atomic properties (atomic_props.json) of electronegativity, atomic radius,
+        and nuclear charge.
+        Molecular charge is included by subtracting it from the nuclear charge of the
+        central atom.
 
-        :return:
-        n x p-array of discretized APE_RF-values (APE_RF-vectors), where n is the number of samples (structures)
-        and p the dimensionality of each APE_RF-vector (controlled by the second APE_RF-parameter)
+        Parameters
+        ----------
+        fmt : str, optional
+            Input format ('xyz' for XYZ files). Default is 'xyz'.
+        mode : str, optional
+            'neighbors' to include only direct neighbors or 'all' to include all atoms.
+            Default is 'all'.
+        smooth_cutoff : bool, optional
+            If True, apply smooth cutoff function. Default is False.
+        path_index : int, optional
+            Index for selecting path from xyz_path list. Default is 0.
+        normalize : bool, optional
+            If True, normalize descriptor vectors. Default is False.
+
+        Returns
+        -------
+        np.ndarray
+            Array of shape (n_samples, dim) containing GAPE feature vectors, where n_samples
+            is the number of structures and dim is the feature vector dimensionality
+            (controlled by descriptor_params['dim']).
+
+        Notes
+        -----
+        Descriptor parameters expected in config:
+        - descriptor_params['rcut']: float
+            Radial cutoff distance
+        - descriptor_params['dim']: int
+            Number of grid points
         """
 
         APE_RF_dataset = []
@@ -94,6 +135,19 @@ class GenDescriptors(BaseConfig):
         return np.array(APE_RF_dataset)
 
     def get_APE_RF_partitioned(self):
+        """Generate APE-RF descriptors for partitioned train/test datasets.
+
+        Returns
+        -------
+        list of np.ndarray
+            List containing [train_descriptors, test_descriptors].
+
+        Raises
+        ------
+        ValueError
+            If xyz_path or descriptor_path are not lists when generating partitioned data.
+        """
+
         path_lists = [self.xyz_path, self.descriptor_path]
 
         for path_list in path_lists:
@@ -113,6 +167,22 @@ class GenDescriptors(BaseConfig):
         return partitioned_data
 
     def get_total_species(self):
+
+        """Extract all unique atomic species present in the dataset.
+
+        Scans all XYZ files in the total dataset to identify unique atomic species.
+        Required for SOAP descriptor initialization.
+
+        Returns
+        -------
+        list of str
+            List of unique atomic symbols present in the dataset.
+
+        Notes
+        -----
+        Assumes total dataset is in directory obtained by replacing 'train_split'
+        with 'total' in the first xyz_path.
+        """
 
         path = self.xyz_path[0].replace('train_split', 'total')
 
@@ -148,18 +218,34 @@ class GenDescriptors(BaseConfig):
 
     def generate_SOAPs(self, path_index=0, normalize=True):
 
-        """
-        Generate the SOAP-descriptor using the DScribe-library (Comput. Phys. Comm. 247 (2020) 106949)
-        and save the output array as .npy-file. Descriptor parameters are specified when creating an
-        instance of this class. Order of SOAP-parameters: [r_cut, n_max, l_max].
+        """Generate SOAP (Smooth Overlap of Atomic Positions) descriptors.
 
-        :param path_index: List index of path to structures and descriptors
-                           (Default is changed in partitioned method)
+        Generates SOAP descriptors using the DScribe library (Comput. Phys. Comm.
+        247 (2020) 106949) and saves output arrays as .npy files.
 
-        :return:
-        n x p-array of SOAP-vectors, where n is the number of samples (structures) and p the
-        dimensionality of each SOAP-vector (dimensionality can be very high depending on
-        the settings of the SOAP-parameters).
+        Parameters
+        ----------
+        path_index : int, optional
+            Index for selecting path from xyz_path and descriptor_path lists.
+            Default is 0.
+        normalize : bool, optional
+            If True, normalize SOAP vectors to unit length. Default is True.
+
+        Returns
+        -------
+        np.ndarray
+            Array of shape (n_samples, n_features) containing SOAP vectors.
+            Dimensionality depends on SOAP parameters (rcut, n_max, l_max).
+
+        Notes
+        -----
+        Descriptor parameters expected in config:
+        - descriptor_params['rcut'] : float
+            Radial cutoff distance
+        - descriptor_params['nmax'] : int
+            Number of radial basis functions
+        - descriptor_params['lmax'] : int
+            Maximum degree of spherical harmonics
         """
         species = self.get_total_species()
 
@@ -215,6 +301,19 @@ class GenDescriptors(BaseConfig):
 
     def generate_SOAPs_partitioned(self):
 
+        """Generate SOAP descriptors for partitioned train/test datasets.
+
+        Returns
+        -------
+        list of np.ndarray
+            List containing [train_descriptors, test_descriptors].
+
+        Raises
+        ------
+        ValueError
+            If xyz_path or descriptor_path are not lists when generating partitioned data.
+        """
+
         path_lists = [self.xyz_path, self.descriptor_path]
 
         for path_list in path_lists:
@@ -232,6 +331,33 @@ class GenDescriptors(BaseConfig):
         return partitioned_data
 
     def get_SIF(self, target_list, path_index=0, fmt='xyz', mode='neighbors', normalize=False):
+        """Generate Charge and Environment Averaged Properties (ChEAP, formerly termed 'SIF')) descriptor.
+
+        Generates the descriptor by concatenating specified mean atomic properties
+        of the neighboring atoms, as well as charge and coordination number of the
+        central atom into a 5D feature vector.
+
+        Parameters
+        ----------
+        target_list : list of str
+            List of atomic properties to include in descriptor (e.g., 'pauling_EN',
+            'atomic_radius', 'nuclear_charge', 'valency', 'qmol').
+        path_index : int, optional
+            Index for selecting path from xyz_path list. Default is 0.
+        fmt : str, optional
+            Input format ('xyz' for XYZ files). Default is 'xyz'.
+        mode : str, optional
+            'neighbors' for bonded atoms only or 'all' for all atoms. Default is 'neighbors'.
+        normalize : bool, optional
+            If True, normalize descriptor vectors to unit length. Default is False.
+
+        Returns
+        -------
+        list of list
+            List of feature vectors, where each vector contains averaged
+            atomic properties specified in target_list.
+        """
+
 
         SIF_dataset = []
 
@@ -271,6 +397,24 @@ class GenDescriptors(BaseConfig):
         return SIF_dataset
 
     def get_SIF_partitioned(self, target_list):
+
+        """Generate ChEAP descriptors for partitioned train/test datasets.
+
+        Parameters
+        ----------
+        target_list : list of str
+            List of atomic properties to include in descriptor.
+
+        Returns
+        -------
+        list of list
+            List containing [train_descriptors, test_descriptors].
+
+        Raises
+        ------
+        ValueError
+            If xyz_path or descriptor_path are not lists when generating partitioned data.
+        """
 
         path_lists = [self.xyz_path, self.descriptor_path]
 

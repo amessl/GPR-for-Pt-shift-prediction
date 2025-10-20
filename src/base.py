@@ -1,7 +1,60 @@
+
 from omegaconf import OmegaConf
 
 
 class BaseConfig:
+    """Base configuration class for descriptor paths and parameters.
+
+    This class initializes and validates configuration parameters for molecular
+    descriptors and coordinate file paths. It supports the types
+    of descriptors used in our publication: ChEAP, GAPE, and SOAP.
+    Configuration is managed through the Hydra framework, which uses OmegaConf
+    for hierarchical configuration management.
+
+    Parameters
+    ----------
+    config : omegaconf.DictConfig
+        Hydra configuration object (DictConfig) containing descriptor parameters
+        and file paths. This is provided by Hydra's @hydra.main decorator
+        from YAML configuration files.
+        Expected structure:
+        - config.representations.rep : str
+            Type of descriptor ('ChEAP', 'GAPE', or 'SOAP')
+        - config.representations.{descriptor_type}_paths : str or list of str
+            Path(s) to descriptor files
+        - config.representations.{descriptor_type}_params : dict
+            Parameters specific to the descriptor type
+        - config.central_atom : str or int
+            Specification of the central atom ('Pt' in this work)
+        - config.xyz_dir : str or list of str
+            Path(s) to XYZ coordinate files
+        - config.xyz_base : str
+            Base path for XYZ files
+
+    Attributes
+    ----------
+    config : omegaconf.DictConfig
+        The full Hydra configuration object.
+    descriptor_type : str
+        Type of molecular descriptor ('ChEAP', 'GAPE', or 'SOAP').
+    descriptor_path : list of str
+        List of paths to descriptor files.
+    descriptor_params : dict
+        Parameters specific to the chosen descriptor type.
+    central_atom : str or int
+        Specification of the central atom.
+    xyz_path : list of str
+        List of paths to XYZ coordinate files.
+    xyz_base : str
+        Base path for XYZ coordinate files.
+
+    Raises
+    ------
+    ValueError
+        If descriptor_type is None or not specified in config.
+        If descriptor_path or xyz_dir are not strings or lists of strings.
+        If descriptor_type is not one of 'ChEAP', 'GAPE', or 'SOAP'.
+    """
 
     def __init__(self, config):
 

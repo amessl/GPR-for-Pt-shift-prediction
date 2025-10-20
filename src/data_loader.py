@@ -10,12 +10,45 @@ from generate_descriptors import GenDescriptors
 
 class DataLoader(BaseConfig):
 
-    def __init__(self, config):
-        """
-       Initialize class for using descriptors as input for Gaussian Process Regression
-       with cross-validated errors, hyperparameter tuning and visualization of learning curves
+    """Data loader for inputs (molecular descriptors) and labels (a.k.a. target values)
+    for the GPR model.
 
-       """
+    This class extends BaseConfig to load molecular descriptors
+    and the experimental chemical shifts. Supports both
+    reading pre-generated descriptors and generating them on-the-fly.
+
+    Parameters
+    ----------
+    config : omegaconf.DictConfig
+        Hydra configuration object containing:
+        - All parameters from BaseConfig
+        - config.mode : str
+            'read' for loading pre-generated descriptors or 'write' for generating new ones
+        - config.backend.model.target_path : str or list of str
+            Path(s) to CSV files containing target values
+
+    Attributes
+    ----------
+    mode : str
+        Operating mode ('read' or 'write').
+    target_path : list of str
+        List of paths to CSV files containing the labels.
+
+    Raises
+    ------
+    ValueError
+        If target_path is not a string or list of strings.
+        If descriptor files are empty.
+    """
+
+    def __init__(self, config):
+        """Initialize DataLoader with configuration.
+
+        Parameters
+        ----------
+        config : omegaconf.DictConfig
+            Hydra configuration object.
+        """
 
         super().__init__(config)
         self.mode = config.mode
@@ -31,16 +64,25 @@ class DataLoader(BaseConfig):
 
     def read_descriptors(self, path_index):
 
-        """
-        Read descriptors that were already generated from corresponding folder as specified
-        when creating an instance of this class.
+        """Read pre-generated descriptors from the corresponding directory.
 
-        :param path_index: Integer number for iterating over list of paths
-        when partitioning data into train and test set (they are stored in individual folders)
+        Loads molecular descriptors from .npy files in the specified directory.
+        Optionally applies L2 normalization if configured.
 
-        :return:
-        n x p-array of feature vectors, where n is the number of samples (structures) and p the
-        dimensionality of each feature vector ("Design matrix")
+        Parameters
+        ----------
+        path_index : int
+            Index for selecting the path when data is partitioned into train/test (holdout) sets.
+
+        Returns
+        -------
+        np.ndarray
+            Design matrix of shape (n_samples, n_features).
+
+        Raises
+        ------
+        ValueError
+            If any descriptor file is empty.
         """
 
         dataset = []
@@ -78,12 +120,28 @@ class DataLoader(BaseConfig):
         return dataset
 
     def load_samples(self, partitioned=True):
-        """
-        Loads samples (representations a. k. a. feature vectors) from pre-generated files
-        or generating them, depending on the "mode" attribute ("read" or "write")
+        """Load or generate molecular descriptors from XYZ structures.
 
-        :param partitioned: Whether to load train and test samples separately (Default=True)
-        :return: Design matrix of total dataset or training and test samples (holdout)
+        Loads descriptors from files (read mode) or generates them on-the-fly (write mode).
+        Supports partitioned data (separate train/test (holdout)) or full dataset.
+
+        Parameters
+        ----------
+        partitioned : bool, optional
+            If True, load train and test samples separately. Default is True.
+
+        Returns
+        -------
+        X_data : np.ndarray or list
+            Training feature matrix or full dataset.
+        X_holdout : np.ndarray or None
+            Test feature matrix if partitioned, else None.
+
+        Raises
+        ------
+        Exception
+            If mode is not 'read' or 'write'.
+            If the descriptor type is invalid.
         """
 
         gen = GenDescriptors(config=self.config)
@@ -138,13 +196,29 @@ class DataLoader(BaseConfig):
         return X_data, X_holdout
 
     def load_targets(self, target_name='Experimental', partitioned=True):
+        """Load target chemical shift values from CSV files.
 
-        """
-        Loads target values (chemical shifts) from csv-file
-        :param target_name: Name of the column in the corresponding csv-file (Default='Experimental')
-        :param partitioned: Whether to load train and test samples separately (Default=True)
-        :return: Total number of targets or training and test targets
-        """
+           Reads experimental labels (chemical shifts) from CSV files.
+           Supports partitioned data with separate train/test (holdout) files.
+
+           Parameters
+           ----------
+           target_name : str, optional
+               Column name in CSV file containing target values. Default is 'Experimental'.
+           partitioned : bool, optional
+               If True, load train and test targets separately. Default is True.
+
+           Returns
+           -------
+           target_data : pd.Series
+               Training set labels or full dataset.
+           target_holdout : pd.Series or None
+               Test (Holdout) Set labels if partitioned, else None.
+           indices : pd.Series
+               Sample indices from the dataset.
+           target_holdout_compound_names : pd.Series or None
+               Compound names for the holdout test set if available, else None.
+           """
         target_holdout_compound_names = None
 
         if partitioned:
