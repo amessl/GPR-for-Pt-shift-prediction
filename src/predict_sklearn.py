@@ -304,8 +304,8 @@ class SklearnGPRegressor(BaseConfig):
 
         if report == 'full':
 
-            correlation = self._plot_correlation(predictions, target_holdout, threshold=test_rmse,
-                                   title=f'{self.descriptor_type}', holdout_names=holdout_names)
+            correlation = self._plot_correlation(predictions, list(target_holdout), threshold=test_rmse,
+                                   title=f'{self.descriptor_type}', holdout_names=list(holdout_names))
 
             print('-'*35)
             print(f'Correlation: {correlation:.2f}')
@@ -399,11 +399,8 @@ class SklearnGPRegressor(BaseConfig):
 
         title : str
             Title of the plot and filename of the saved figure. Descriptor type by default.
-
-        Returns
-        -------
-        None
         """
+
         warnings.filterwarnings('ignore')
 
         train_sizes, train_scores, test_scores = learning_curve(estimator, X_data, target_data,
@@ -465,7 +462,6 @@ class SklearnGPRegressor(BaseConfig):
 
         Returns
         -------
-
         correlation : float
             Correlation coefficient squared between observed and predicted values.
         """
