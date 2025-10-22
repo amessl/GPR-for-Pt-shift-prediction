@@ -93,3 +93,4 @@ class BaseConfig:
             raise ValueError("Paths should be a string or a list of strings.")
 
         self.xyz_base = config.xyz_base
+        self.partitioned = config.partitioned

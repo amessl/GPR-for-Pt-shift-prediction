@@ -79,8 +79,7 @@ class GenDescriptors(BaseConfig):
         APE_RF_dataset = []
         xyz_filenames = sorted(os.listdir(self.xyz_path[path_index]), key=lambda x: int(x.replace(self.xyz_base, '').split('.')[0]))
 
-        APE_RF_path = os.path.join(self.descriptor_path[path_index], '_'.join(param for param in self.descriptor_params))
-
+        APE_RF_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(self.descriptor_params[param]) for param in self.descriptor_params))
         os.makedirs(APE_RF_path, exist_ok=True)
 
         for xyz_filename in xyz_filenames:
@@ -240,11 +239,11 @@ class GenDescriptors(BaseConfig):
         Notes
         -----
         Descriptor parameters expected in config:
-        - descriptor_params['rcut'] : float
+        - descriptor_params['rcut']: float
             Radial cutoff distance
-        - descriptor_params['nmax'] : int
+        - descriptor_params['nmax']: int
             Number of radial basis functions
-        - descriptor_params['lmax'] : int
+        - descriptor_params['lmax']: int
             Maximum degree of spherical harmonics
         """
         species = self.get_total_species()
@@ -255,7 +254,7 @@ class GenDescriptors(BaseConfig):
         # Setting up SOAPs with DScribe library
         SOAP_dataset = []
 
-        descriptor_folder = '_'.join(param for param in self.descriptor_params)
+        descriptor_folder = '_'.join(str(self.descriptor_params[param]) for param in self.descriptor_params)
         SOAP_path = os.path.join(self.descriptor_path[path_index], descriptor_folder)
 
         os.makedirs(SOAP_path, exist_ok=True)
@@ -387,12 +386,17 @@ class GenDescriptors(BaseConfig):
 
             SIF_vec = np.array(feature_vector, dtype=float)
 
+            SIF_file = f'{int(xyz_filename.replace(self.xyz_base, "").split(".")[0])}.npy'
+
+            np.save(os.path.join(SIF_path, SIF_file), SIF_vec)
+
             if normalize:
                 nrm = np.linalg.norm(SIF_vec)
                 if nrm > 0:
                     SIF_vec = SIF_vec / nrm
 
             SIF_dataset.append(SIF_vec.tolist())
+
 
         return SIF_dataset
 
