@@ -3,6 +3,8 @@ import hydra
 from omegaconf import DictConfig
 from src.predict_sklearn import SklearnGPRegressor
 
+# TODO: Save fits and descriptors to separate directory when training on full set (partitioned=False)
+
 @hydra.main(config_path="../conf", config_name="config", version_base="1.1")
 def eval_model(cfg: DictConfig):
     """
@@ -27,9 +29,9 @@ def eval_model(cfg: DictConfig):
         Notes
         -----
         The pipeline supports three modes:
-            - ``train``: Perform model fitting using training data and specified hyperparameters.
-            - ``test``: Evaluate the trained model on test data and generate performance reports.
-            - ``None``: Sequentially execute both training and testing stages.
+            - 'train': Perform model fitting using training data and specified hyperparameters.
+            - 'test': Evaluate the trained model on test data and generate performance reports.
+            - 'null': Sequentially execute both training and testing stages.
 
         The trained model and evaluation artifacts are persisted based on the reporting configuration.
 

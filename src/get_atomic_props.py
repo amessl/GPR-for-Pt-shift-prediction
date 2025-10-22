@@ -256,7 +256,7 @@ class AtomPropsDist(BaseConfig):
 
         Returns
         -------
-        prop_list : list[float]
+        prop_list : list
             Property values in the same order as selected atoms.
         mean_prop : float
             Mean of the property values (NaN if no atoms selected).

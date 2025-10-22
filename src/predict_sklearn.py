@@ -14,11 +14,11 @@ from data_loader import DataLoader
 
 
 class SklearnGPRegressor(BaseConfig):
-    """Gaussian Process Regressor for molecular property prediction.
+    """Gaussian Process Regressor for molecular property (chemical shift) prediction.
 
         This class implements GP regression with scikit-learn for predicting NMR
         chemical shifts from molecular descriptors. Provides training with cross-validation,
-        testing with uncertainty quantification, and visualization of results.
+        testing with uncertainty quantification and visualization of results.
 
         Parameters
         ----------
@@ -70,7 +70,7 @@ class SklearnGPRegressor(BaseConfig):
         """ Uses the sklearn implementation of Gaussian Process Regression. Defines GPR model with linear/
         polynomial kernel and evaluates a given hyperparameter combination (of the representation and the GPR model)
         on a given dataset using k-fold cross-validation. Provides learning curves for the training and validation set
-        and option of optimizing the noise level based on the gradient of the log marginal likelihood (LML) (sklearn backend)
+        and the option of optimizing the noise level based on the gradient of the log marginal likelihood (LML) (sklearn backend)
 
         Parameters
         ----------
@@ -104,6 +104,12 @@ class SklearnGPRegressor(BaseConfig):
         np.linalg.LinAlgError
             If kernel matrix is singular.
         """
+
+        if self.partitioned:
+            print("Using partitioned dataset (only train split used for training)")
+        else:
+            print("Using whole dataset (train + holdout test set) for training.")
+
 
         X_data = self.data_loader.load_samples()[0]
         target_data = self.data_loader.load_targets(target_name='Experimental')[0]
@@ -312,7 +318,7 @@ class SklearnGPRegressor(BaseConfig):
             print(f'Average Uncertainty (ppm): {np.mean(std):.0f}')
             print('-' * 35)
 
-            self._empirical_coverage(predictions, std, target_holdout)
+            self._empirical_coverage(predictions, std, list(target_holdout))
 
             metrics = {'Test MAE': test_mae,
                        'Test RMSE': test_rmse,
@@ -474,7 +480,7 @@ class SklearnGPRegressor(BaseConfig):
                     abs(res) > threshold]
 
         plt.scatter(target_holdout, predictions, edgecolors=(0, 0, 0))
-        plt.plot([target_holdout.min(), target_holdout.max()], [target_holdout.min(), target_holdout.max()], 'k-',
+        plt.plot([min(target_holdout), max(target_holdout)], [min(target_holdout), max(target_holdout)], 'k-',
                  lw=2)
 
         for observed, pred, res, name in outliers:

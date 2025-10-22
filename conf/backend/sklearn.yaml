@@ -6,6 +6,7 @@ model:
   target_path:
     - ${data_root}/labels/train_test_split/indexed_targets_train.csv
     - ${data_root}/labels/train_test_split/indexed_targets_test.csv
+    - ${data_root}/labels/total_set_clean_120525.csv
   fit_path: ${data_root}/fits/
 
 training:

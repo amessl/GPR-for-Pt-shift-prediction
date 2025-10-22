@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import os
-from sklearn.preprocessing import Normalizer
 from base import BaseConfig
 from omegaconf import OmegaConf
 from generate_descriptors import GenDescriptors
@@ -87,12 +86,13 @@ class DataLoader(BaseConfig):
 
         dataset = []
 
-        descriptor_path = os.path.join(self.descriptor_path[path_index],
-                                       '_'.join(str(param) for param in self.descriptor_params))
+        descriptor_path = os.path.join(self.descriptor_path[path_index], '_'.join(str(self.descriptor_params[param]) for param in self.descriptor_params))
+
         descriptor_filenames = sorted(os.listdir(descriptor_path), key=lambda x: int(x.split('.')[0]))
 
         memory = 0
         file_count = 0
+
 
         for filename in descriptor_filenames:
 
@@ -109,9 +109,6 @@ class DataLoader(BaseConfig):
 
             file_count += 1
 
-        if self.config.normalize:
-            dataset = Normalizer(norm='l2').fit_transform(dataset)
-
         print(f'Descriptor files read: {len(descriptor_filenames)} \nAverage size: '
               f'{round((memory / file_count) / 1024, 3)} kB \n')
 
@@ -119,16 +116,11 @@ class DataLoader(BaseConfig):
 
         return dataset
 
-    def load_samples(self, partitioned=True):
+    def load_samples(self):
         """Load or generate molecular descriptors from XYZ structures.
 
         Loads descriptors from files (read mode) or generates them on-the-fly (write mode).
         Supports partitioned data (separate train/test (holdout)) or full dataset.
-
-        Parameters
-        ----------
-        partitioned : bool, optional
-            If True, load train and test samples separately. Default is True.
 
         Returns
         -------
@@ -146,8 +138,6 @@ class DataLoader(BaseConfig):
 
         gen = GenDescriptors(config=self.config)
 
-        X_holdout = None
-
         if self.mode == 'read':
 
             X_data = []
@@ -155,36 +145,44 @@ class DataLoader(BaseConfig):
             for path_index in range(0, len(self.descriptor_path)):
                 X_data.append(self.read_descriptors(path_index))
 
-            if partitioned:
-                X_train, X_holdout = X_data
+            if self.partitioned:
+                X_train = X_data[0]
+                X_holdout = X_data[1]
+
             else:
-                X_data = np.vstack(X_data) if len(X_data) > 1 else X_data[0]
+                X_train = X_data[0]
+                X_holdout = X_data[1]
+                X_train = np.vstack((X_train, X_holdout))
 
 
         elif self.mode == 'write':
 
             if self.descriptor_type == 'SOAP':
 
-                if partitioned:
-                    X_data, X_holdout = gen.generate_SOAPs_partitioned()
+                if self.partitioned:
+                    X_train, X_holdout = gen.generate_SOAPs_partitioned()
                 else:
-                    X_data = gen.generate_SOAPs()
+                    X_train, X_holdout = gen.generate_SOAPs_partitioned()
+                    X_train = np.vstack((X_train, X_holdout))
+
 
             elif self.descriptor_type == 'GAPE':
 
-                if partitioned:
-                    X_data, X_holdout = gen.get_APE_RF_partitioned()
+                if self.partitioned:
+                    X_train, X_holdout = gen.get_APE_RF_partitioned()
 
                 else:
-                    X_data = gen.get_APE_RF(path_index=2) # TODO: remove training on whole set for all (not needed)
+                    X_train, X_holdout = gen.get_APE_RF_partitioned()
+                    X_train = np.vstack((X_train, X_holdout))
 
             elif self.descriptor_type == 'ChEAP':
 
-                if partitioned:
-                    X_data, X_holdout = gen.get_SIF_partitioned(target_list=self.descriptor_params)
+                if self.partitioned:
+                    X_train, X_holdout = gen.get_SIF_partitioned(target_list=self.descriptor_params)
 
                 else:
-                    X_data = gen.get_SIF(target_list=self.descriptor_params, path_index=2)
+                    X_train, X_holdout = gen.get_SIF_partitioned(target_list=self.descriptor_params)
+                    X_train = np.vstack((X_train, X_holdout))
 
             else:
                 raise Exception('Descriptor type has to be specified. Use "SOAP" or "GAPE"')
@@ -193,9 +191,9 @@ class DataLoader(BaseConfig):
             raise Exception('Mode has to be specified as "read" for using pre-generated descriptors \n'
                             'or "write" for generating new descriptors and passing them as input"')
 
-        return X_data, X_holdout
+        return X_train, X_holdout
 
-    def load_targets(self, target_name='Experimental', partitioned=True):
+    def load_targets(self, target_name='Experimental'):
         """Load target chemical shift values from CSV files.
 
            Reads experimental labels (chemical shifts) from CSV files.
@@ -219,34 +217,30 @@ class DataLoader(BaseConfig):
            target_holdout_compound_names : pd.Series or None
                Compound names for the holdout test set if available, else None.
            """
-        target_holdout_compound_names = None
 
-        if partitioned:
+        target_training_data = pd.read_csv(f'{self.target_path[0]}')
+        target_test_data = pd.read_csv(f'{self.target_path[1]}')
 
-            target_training_data = pd.read_csv(f'{self.target_path[0]}')
-            target_test_data = pd.read_csv(f'{self.target_path[1]}')
+        sorted_train = target_training_data.sort_values(by='Index')
+        sorted_test = target_test_data.sort_values(by='Index')
 
-            sorted_train = target_training_data.sort_values(by='Index')
-            sorted_test = target_test_data.sort_values(by='Index')
+        try:
+            target_holdout_compound_names = sorted_test['Name']
 
+        except KeyError as key_err:
+            print('Error encountered while reading compound names. \n',
+                  f'No key {key_err} in target data.')
+            print('Proceeding.')
+
+            target_holdout_compound_names = None
+
+        if self.partitioned:
+            target_data = sorted_train[str(target_name)]
+            target_holdout = sorted_test[str(target_name)]
+        else:
             target_data = sorted_train[str(target_name)]
             target_holdout = sorted_test[str(target_name)]
 
-            try:
-                target_holdout_compound_names = sorted_test['Name']
-
-            except KeyError as key_err:
-                print('Error encountered while reading compound names. \n',
-                      f'No key {key_err} in target data.')
-                print('Proceeding.')
-
-                target_holdout_compound_names = None
-
-        else:
-            indexed_target_data = pd.read_csv(f'{self.target_path[2]}')
-            sorted_train = indexed_target_data.sort_values(by='Index')
-
-            target_data = sorted_train[str(target_name)]
-            target_holdout = None
+            target_data = pd.concat([target_data, target_holdout])
 
         return target_data, target_holdout, sorted_train['Index'], target_holdout_compound_names
