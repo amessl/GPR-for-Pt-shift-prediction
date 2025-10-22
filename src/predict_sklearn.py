@@ -189,7 +189,9 @@ class SklearnGPRegressor(BaseConfig):
 
             filename = f'GPR_z{kernel_degree}_opt_a{noise}.sav'
 
-            pickle.dump(estimator, open(os.path.join(directory, filename), 'wb'))
+            with open(os.path.join(directory, filename), 'wb') as f:
+                pickle.dump(estimator, f)
+
             print(f'Fit saved to {directory}. \n')
 
         metrics = {
@@ -354,7 +356,7 @@ class SklearnGPRegressor(BaseConfig):
        Returns
        -------
        coverage : float
-            Empirical coverage probability of model on the holdout set.
+            Empirical coverage probability of the model on the holdout set.
        """
 
         CI_lower = [pred - (z_score * st_dev) for pred, st_dev in zip(predictions, st_devs)]
@@ -377,6 +379,31 @@ class SklearnGPRegressor(BaseConfig):
 
     @staticmethod
     def _plot_learning_curve(estimator, X_data, target_data, title):
+        """Generate learning curves for a given model
+
+        Plots the Monte-Carlo cross-validated (ShuffleSplit()) training and validation MAE
+        for different training set sizes. For each training set size, the validation set size
+        amounts to 20% of the training set size.
+
+        Parameters
+        ----------
+
+        estimator : GaussianProcessRegressor
+            The regressor with hyperparameters as specified in gpr_train.
+
+        X_data : array-like
+            Array of shape (n_samples, n_features) containing the training inputs.
+
+        target_data : array-like
+            Array of shape (n_samples, 1) containing the training labels (targets).
+
+        title : str
+            Title of the plot and filename of the saved figure. Descriptor type by default.
+
+        Returns
+        -------
+        None
+        """
         warnings.filterwarnings('ignore')
 
         train_sizes, train_scores, test_scores = learning_curve(estimator, X_data, target_data,
@@ -409,6 +436,39 @@ class SklearnGPRegressor(BaseConfig):
 
     @staticmethod
     def _plot_correlation(predictions, target_holdout, threshold, title, holdout_names, show_outliers=True):
+        """Generate parity plot for a given model
+
+        Plots the observed vs. predicted values of the holdout set and provides the correlation coefficient.
+        Predictions that deviate from the observed values more than the holdout RMSE are flagged as outliers
+        and plotted in red.
+
+        Parameters
+        ----------
+
+        predictions : list
+            List of a given model's predictions on the holdout set.
+
+        target_holdout : list
+            List of true label values of the holdout set.
+
+        threshold : float
+            Threshold value for outlier detection (Holdout RMSE by default).
+
+        title : str
+            Title of the plot and filename of the saved figure. Descriptor type by default.
+
+        holdout_names : list
+            List of compound names corresponding to the holdout set.
+
+        show_outliers : bool
+            Whether to flag outliers in the plot
+
+        Returns
+        -------
+
+        correlation : float
+            Correlation coefficient squared between observed and predicted values.
+        """
 
         correlation = r2_score(target_holdout, predictions)
 
@@ -448,5 +508,3 @@ class SklearnGPRegressor(BaseConfig):
         plt.show()
 
         return correlation
-
-# TODO: Don't forget README before re-submitting
