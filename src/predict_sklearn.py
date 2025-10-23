@@ -80,7 +80,7 @@ class SklearnGPRegressor(BaseConfig):
             Likelihood variance a. k. a. noise variance of the labels (is only added to K(X,X) of training points,
             noise is added to K(X,X) of test points when using WhiteKernel()
         save_fit : bool
-            Whether to save the state of the fitted model
+            Whether to save the state of the fitted model in a binary format using pickle
         stratify_train : bool
             Whether the train/validation splits in k-fold CV are stratified or not.
         report : str
@@ -190,7 +190,14 @@ class SklearnGPRegressor(BaseConfig):
             scores_mae = cross_val_score(estimator, X_data, target_data, scoring='neg_mean_absolute_error', cv=cv, n_jobs=1)
 
         if save_fit:
-            directory = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
+
+            if self.partitioned:
+                directory = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
+
+            else:
+                fit_path = os.path.join(self.fit_path, "fitted_on_total_set")
+                directory = os.path.join(fit_path, f'{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}')
+
             os.makedirs(directory, exist_ok=True)
 
             filename = f'GPR_z{kernel_degree}_opt_a{noise}.sav'

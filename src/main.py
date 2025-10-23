@@ -12,7 +12,7 @@ def eval_model(cfg: DictConfig):
         managed by hydra.
 
         This function acts as the main entry point for orchestrating the model workflow,
-        including training, testing on holdout set, and sequential execution, depending on the configured task.
+        including training, testing on the holdout set, and sequential execution, depending on the configured task.
         Hydra for hierarchical configuration management to ensure reproducible runs.
 
         Parameters
@@ -46,7 +46,7 @@ def eval_model(cfg: DictConfig):
         model.gpr_test(**cfg.backend.testing, report=cfg.report)
 
     elif cfg.task is None:
-        print("No mode specified. Carrying out subsequent train and test runs")
+        print("No task specified. Carrying out subsequent train and test runs")
 
         model.gpr_train(**cfg.backend.training, report=cfg.report)
         model.gpr_test(**cfg.backend.testing, report=cfg.report)
