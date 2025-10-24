@@ -16,6 +16,7 @@ data/structures/old
 data/labels/old
 paper/
 
+.idea/
 
 # Ignore virtual environment
 .venv/
