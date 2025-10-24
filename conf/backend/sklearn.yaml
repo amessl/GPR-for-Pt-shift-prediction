@@ -2,7 +2,7 @@ model:
   _target_: src.predict_sklearn.SklearnGPRegressor
   data_loader:
     _target_: src.data_loader.DataLoader
-  mode: write
+
   target_path:
     - ${data_root}/labels/train_test_split/indexed_targets_train.csv
     - ${data_root}/labels/train_test_split/indexed_targets_test.csv
@@ -10,11 +10,11 @@ model:
   fit_path: ${data_root}/fits/
 
 training:
-  kernel_degree: 2
+  kernel_degree: ${zeta}
   noise: 0.01
   save_fit: true
   stratify_train: true
 
 testing:
-  kernel_degree: 2
+  kernel_degree: ${zeta}
   noise: 0.01

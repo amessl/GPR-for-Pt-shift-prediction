@@ -10,12 +10,11 @@ model:
     - ${data_root}/_benchmark/fits/
 
 training:
-  kernel_degree: 2
+  kernel_degree: ${zeta}
   noise: 0.01
   save_fit: true
   stratify_train: true
-  ard: false
 
 testing:
-  kernel_degree: 2
+  kernel_degree: ${zeta}
   noise: 0.01
