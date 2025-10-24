@@ -126,8 +126,8 @@ def test_target_dist(train_targets, test_targets):
     print('Performing Kolmogorov-Smirnov Test to compare target distribution in stratified split.', '\n')
     ks_stat, p_value = ks_2samp(train_targets, test_targets)
 
-    print('KS Stats:', ks_stat)
-    print('p-value:', p_value)
+    print('KS Stats:', np.round(ks_stat, 4))
+    print('p-value:', np.round(p_value, 4))
 
     return ks_stat, p_value
 
@@ -150,6 +150,9 @@ def main(cfg: DictConfig):
            - splitting.splitting.test_size (float): Proportion of data for test split.
            - splitting.splitting.run_ks (bool): Whether to perform KS test on the target distributions.
     """
+
+    print(f"Performing stratified split (binning label range into {cfg.splitting.splitting.k_quantiles} quantiles).")
+    print(f"Size of the holdout set: {100*cfg.splitting.splitting.test_size} % of total dataset. \n")
 
     index_train, index_test, \
         y_train, y_test = stratified_split(target_data=cfg.splitting.target.original_target,
