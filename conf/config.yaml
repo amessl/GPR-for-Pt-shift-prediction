@@ -2,7 +2,7 @@ defaults:
   - _self_
   - representations: default
   - splitting: default
-  - backend: sklearn # Keep, gpytorch backend not implemented yet
+  - backend: sklearn
   - grid_search: default
 
 data_root: /home/alex/Pt_NMR/data
@@ -11,7 +11,7 @@ xyz_dir:
   - ${data_root}/structures/train_split
   - ${data_root}/structures/test_split
 central_atom: Pt
-mode: read
+mode: write
 ap_path: ${data_root}/atomic_props.json
 task: null
 report: full
