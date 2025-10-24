@@ -441,7 +441,6 @@ class SklearnGPRegressor(BaseConfig):
         plt.legend(loc='best', fontsize=14)
         plt.title(title, fontsize=18)
         plt.grid()
-        plt.savefig(f'/home/alex/Pt_NMR/paper/figs/lc_{title}.png', dpi=400, bbox_inches='tight')
         plt.show()
 
     @staticmethod
@@ -513,7 +512,6 @@ class SklearnGPRegressor(BaseConfig):
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
         plt.title(f'{title} ($R^2$ = {correlation:.2f})', fontsize=18)
-        plt.savefig(f'/home/alex/Pt_NMR/paper/figs/pp_{title}.png', dpi=400, bbox_inches='tight')
         plt.show()
 
         return correlation

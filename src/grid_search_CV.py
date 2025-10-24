@@ -9,6 +9,8 @@ import webbrowser
 import time
 from multiprocessing import Pool
 
+# Update this path to match your local env
+MLFLOW_TRACKING_URI = '/home/alex/Pt_NMR/mlruns' # Change
 
 def worker(args):
     """Worker function for parallel grid search execution.
@@ -25,7 +27,7 @@ def worker(args):
 
 
 @hydra.main(config_path="../conf", config_name="config", version_base="1.1")
-def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = True):
+def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = False):
     """Perform grid search over GP and descriptor hyperparameters.
 
     Executes an exhaustive grid search of descriptor-specific parameters (e.g., SOAP
@@ -76,7 +78,7 @@ def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = Tr
 
     grid = list(itertools.product(*combined_grid.values()))
 
-    mlflow.set_tracking_uri('/home/alex/Pt_NMR/mlruns')
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
     if parallel:
         tasks = []
@@ -98,7 +100,7 @@ def eval_model_grid(cfg: DictConfig, mlflow_ui: bool = True, parallel: bool = Tr
             # Store config as dict
             tasks.append((hyperparams_dict, OmegaConf.to_container(updated_cfg, resolve=True)))
 
-        with Pool(processes=4) as pool:
+        with Pool(processes=1) as pool:
             pool.map(worker, tasks)
 
 
@@ -157,7 +159,7 @@ def eval_param_comb(hyperparams_dict: dict, cfg: DictConfig):
 
     Notes
     -----
-    Logs train MAE to MLflow. Failed runs log inf (singular kernel matrix) or
+    Logs train MAE to mlflow. Failed runs log inf (singular kernel matrix) or
     NaN (other exceptions).
     """
 
