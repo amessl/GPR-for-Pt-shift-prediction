@@ -1,6 +1,6 @@
 #Configuration of representations
 
-rep: GAPE # Type of reprsentation is None per default and
+rep: SOAP # Type of reprsentation is None per default and
           # needs to be specified att runtime or when instantiating model
 
 # ChEAP

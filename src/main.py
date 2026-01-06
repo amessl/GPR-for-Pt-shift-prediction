@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 from src.predict_sklearn import SklearnGPRegressor
 
 # TODO: Save fits and descriptors to separate directory when training on full set (partitioned=False)
+# TODO: Containerize using docker for publication
 
 @hydra.main(config_path="../conf", config_name="config", version_base="1.1")
 def eval_model(cfg: DictConfig):
