@@ -1,5 +1,5 @@
 import numpy as np
-from predict_sklearn import SklearnGPRegressor
+from src.predict_sklearn import SklearnGPRegressor
 import itertools
 import hydra
 from omegaconf import DictConfig, OmegaConf

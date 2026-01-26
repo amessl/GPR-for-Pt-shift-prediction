@@ -8,9 +8,9 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF, WhiteKernel, ConstantKernel
 from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold, learning_curve, ShuffleSplit
 from sklearn.metrics import r2_score, mean_absolute_error, root_mean_squared_error
-from base import BaseConfig
+from src.base import BaseConfig
 from omegaconf import OmegaConf
-from data_loader import DataLoader
+from src.data_loader import DataLoader
 
 
 class SklearnGPRegressor(BaseConfig):

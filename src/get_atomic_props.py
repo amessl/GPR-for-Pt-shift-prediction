@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import statistics
-from base import BaseConfig
+from src.base import BaseConfig
 import os
 
 

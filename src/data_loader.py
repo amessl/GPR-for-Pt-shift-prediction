@@ -2,9 +2,9 @@
 import numpy as np
 import pandas as pd
 import os
-from base import BaseConfig
+from src.base import BaseConfig
 from omegaconf import OmegaConf
-from generate_descriptors import GenDescriptors
+from src.generate_descriptors import GenDescriptors
 
 
 class DataLoader(BaseConfig):

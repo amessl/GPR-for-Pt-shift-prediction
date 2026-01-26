@@ -2,6 +2,7 @@
 src/SOAP_analysis.ipynb
 src/plots.ipynb
 src/sync_mlruns.sh
+src/sync_src_cluster.sh
 src/utils.py
 src/analysis.ipynb
 src/outputs
