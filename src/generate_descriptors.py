@@ -3,8 +3,8 @@ import os
 from rdkit.Chem import rdmolfiles
 from ase import Atoms
 from dscribe.descriptors import SOAP
-from get_atomic_props import AtomPropsDist
-from base import BaseConfig
+from src.get_atomic_props import AtomPropsDist
+from src.base import BaseConfig
 
 class GenDescriptors(BaseConfig):
     """Generator for molecular descriptors from XYZ structure files.
