@@ -43,6 +43,9 @@ All molecular structures used in this work can be found in [data/structures/tota
 ├── README.md
 ├── requirements.txt
 ├── src
+│   ├── inference
+│       ├── infer_single.py
+│       └── predict_chem_shift.py
 │   ├── base.py
 │   ├── data_loader.py
 │   ├── example_use.ipynb
