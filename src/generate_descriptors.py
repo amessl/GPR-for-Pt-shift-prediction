@@ -165,6 +165,58 @@ class GenDescriptors(BaseConfig):
 
         return partitioned_data
 
+    def get_APE_RF_single(self, input_xyz, fmt='xyz', mode='all', smooth_cutoff=False, path_index=None, normalize=False):
+        apd = AtomPropsDist(self.config)
+
+        qmol = apd.get_qmol(input_xyz, path_index)
+
+        EN_list = apd.get_atomic_properties(target='pauling_EN', mode=mode, fmt=fmt, filename=input_xyz,
+                                            path_index=path_index)[0]
+        atomic_radii_list = apd.get_atomic_properties(target='atomic_radius', mode=mode, fmt=fmt, filename=input_xyz,
+                                                      path_index=path_index)[0]
+        charge_list = apd.get_atomic_properties(target='nuclear_charge', mode=mode, fmt=fmt, filename=input_xyz,
+                                                path_index=path_index)[0]
+
+        central_atom_distances = apd.get_adjacent_atoms_xyz(filename=input_xyz, path_index=path_index)[1]
+        adjacent_atom_coord_list = apd.get_adjacent_atoms_xyz(filename=input_xyz, path_index=path_index)[4]
+
+        central_atom_coord = apd.get_adjacent_atoms_xyz(filename=input_xyz, path_index=path_index)[3]
+        central_atom_charge = apd.get_central_atom_props(target='nuclear_charge')
+        central_atom_EN = apd.get_central_atom_props(target='pauling_EN')
+        central_atom_radius = apd.get_central_atom_props(target='atomic_radius')
+
+        relative_position_vector_list = []
+
+        for coord in adjacent_atom_coord_list:
+            relative_position = central_atom_coord - coord
+            relative_position_vector_list.append(relative_position)
+
+        x = np.linspace(0.0, self.descriptor_params['rcut'], num=self.descriptor_params['dim'])
+
+        central_gaussian = (central_atom_charge - 0.1 * qmol) * np.exp(
+            (-central_atom_EN * (x - 0) ** 2) / central_atom_radius)
+
+        if smooth_cutoff:
+            smoothing = 0.5 * (np.cos((np.pi * x) / self.descriptor_params['rcut']) + 1)
+        else:
+            smoothing = 1
+
+        for i in range(0, len(EN_list)):
+            adjacent_gaussian = charge_list[i] * np.exp(
+                -(EN_list[i] * (x - central_atom_distances[i]) ** 2) / atomic_radii_list[i])
+
+            central_gaussian += adjacent_gaussian
+
+            i += 1
+
+        central_gaussian = central_gaussian * smoothing
+
+        if normalize:
+            central_gaussian = central_gaussian / np.linalg.norm(central_gaussian)
+
+        return central_gaussian.reshape(1,-1)
+
+
     def get_total_species(self):
 
         """Extract all unique atomic species present in the dataset.
@@ -329,6 +381,41 @@ class GenDescriptors(BaseConfig):
 
         return partitioned_data
 
+
+    def generate_SOAP_single(self, input_xyz, normalize=True):
+
+        species = self.get_total_species()
+        soap_power_spectrum = None
+
+        try:
+            mol = rdmolfiles.MolFromXYZFile(input_xyz)
+            central_atom_index = [atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == self.central_atom]
+            atom_symbols = [atom.GetSymbol() for atom in mol.GetAtoms()]
+            atom_positions = mol.GetConformer().GetPositions()
+
+            atoms = Atoms(symbols=atom_symbols, positions=atom_positions)
+
+            soap = SOAP(
+                species=species,
+                periodic=False,
+                r_cut=float(self.descriptor_params['rcut']),
+                n_max=int(self.descriptor_params['nmax']),
+                l_max=int(self.descriptor_params['lmax'])
+            )
+
+            soap_power_spectrum = soap.create(atoms, centers=central_atom_index)
+
+            if normalize:
+                soap_power_spectrum = soap_power_spectrum / np.linalg.norm(soap_power_spectrum)
+
+        except Exception as e:
+            print(e)
+
+            pass
+
+        return soap_power_spectrum.reshape(1,-1)
+
+
     def get_SIF(self, target_list, path_index=0, fmt='xyz', mode='neighbors', normalize=False):
         """Generate Charge and Environment Averaged Properties (ChEAP, formerly termed 'SIF')) descriptor.
 
@@ -436,3 +523,25 @@ class GenDescriptors(BaseConfig):
 
 
         return partitioned_data
+
+    def get_SIF_single(self, input_xyz, target_list, path_index=None, fmt='xyz', mode='neighbors', normalize=False):
+        apd = AtomPropsDist(config=self.config)
+
+        feature_vector = []
+
+        for target in target_list:
+
+            if target == 'qmol':
+                feature_vector.append(apd.get_qmol(filename=input_xyz, path_index=path_index))
+
+            elif target == 'valency':
+                feature_vector.append(apd.get_atomic_properties(target='pauling_EN', mode=mode, fmt=fmt,
+                                                                filename=input_xyz, path_index=path_index)[2])
+
+            else:
+                feature_vector.append(apd.get_atomic_properties(target=target, mode=mode, fmt=fmt,
+                                                                filename=input_xyz, path_index=path_index)[1])
+
+        SIF_vec = np.array(feature_vector, dtype=float).reshape(1,-1)
+
+        return SIF_vec

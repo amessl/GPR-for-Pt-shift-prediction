@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import pickle
+import joblib
 import warnings
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import DotProduct, Exponentiation, RBF, WhiteKernel, ConstantKernel
@@ -64,6 +65,7 @@ class SklearnGPRegressor(BaseConfig):
             raise ValueError("Paths should be a string or a list of strings")
 
         self.fit_path = config.backend.model.fit_path
+        self.retrained_path = config.backend.model.retrained_models_path
 
     def gpr_train(self, kernel_degree, noise, save_fit=True, stratify_train=True, report=None):
 
@@ -108,7 +110,7 @@ class SklearnGPRegressor(BaseConfig):
         if self.partitioned:
             print("Using partitioned dataset (only train split used for training)")
         else:
-            print("Using whole dataset (train + holdout test set) for training.")
+            print("Retraining on whole dataset (train + holdout test set).")
 
 
         X_data = self.data_loader.load_samples()[0]
@@ -193,19 +195,23 @@ class SklearnGPRegressor(BaseConfig):
 
             if self.partitioned:
                 directory = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
+                os.makedirs(directory, exist_ok=True)
+                filename = f'GPR_z{kernel_degree}_{self.descriptor_type}.sav'
+
+                with open(os.path.join(directory, filename), 'wb') as f:
+                    pickle.dump(estimator, f)
+
+                print(f'Fit saved to {directory}. \n')
 
             else:
-                fit_path = os.path.join(self.fit_path, "fitted_on_total_set")
-                directory = os.path.join(fit_path, f'{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}')
+                directory = self.retrained_path
+                os.makedirs(directory, exist_ok=True)
+                filename = f'GPR_{self.descriptor_type}.joblib'
 
-            os.makedirs(directory, exist_ok=True)
+                joblib.dump(estimator, os.path.join(directory, filename))
 
-            filename = f'GPR_z{kernel_degree}_opt_a{noise}.sav'
+                print(f'Fit saved to {directory}. \n')
 
-            with open(os.path.join(directory, filename), 'wb') as f:
-                pickle.dump(estimator, f)
-
-            print(f'Fit saved to {directory}. \n')
 
         metrics = {
             'Training MAE': np.mean(np.abs(scores_mae)),
@@ -345,6 +351,7 @@ class SklearnGPRegressor(BaseConfig):
                 print("{:<20} {:.0f}".format(key, value))
 
         return test_mae, test_rmse, predictions, std, residuals, holdout_names
+
 
     @staticmethod
     def _empirical_coverage(predictions, st_devs, target_holdout, z_score=1.96):

@@ -94,8 +94,10 @@ class AtomPropsDist(BaseConfig):
         ``distances_to_central`` at indices corresponding to entries in
         ``neighbors`` within ``adjacent_atom_symbol_list``.
         """
-
-        path = os.path.join(self.xyz_path[path_index], filename)
+        if path_index is None:
+            path = filename
+        else:
+            path = os.path.join(self.xyz_path[path_index], filename)
 
         with open(path, 'r') as xyz_file:
             lines = xyz_file.readlines()[2:]
@@ -181,7 +183,11 @@ class AtomPropsDist(BaseConfig):
             If the XYZ file cannot be found at the constructed path.
         """
 
-        path = os.path.join(self.xyz_path[path_index], filename)
+        if path_index is None:
+            path = filename
+        else:
+            path = os.path.join(self.xyz_path[path_index], filename)
+
         with open(path, 'r') as xyz_file:
             qmol_line = xyz_file.readlines()[1]
             qmol = qmol_line.strip()

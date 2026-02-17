@@ -8,6 +8,7 @@ model:
     - ${data_root}/labels/train_test_split/indexed_targets_test.csv
     - ${data_root}/labels/total_set_clean_120525.csv
   fit_path: ${data_root}/fits/
+  retrained_models_path: ${data_root}/fits/total/
 
 training:
   kernel_degree: ${zeta}
@@ -16,5 +17,9 @@ training:
   stratify_train: true
 
 testing:
+  kernel_degree: ${zeta}
+  noise: 0.01
+
+retraining:
   kernel_degree: ${zeta}
   noise: 0.01
