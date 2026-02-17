@@ -4,7 +4,7 @@
 
 This repository provides the datasets and machine learning models used in our publication:
 
-> **A. Meßler and H. Bahmann*, “Uncertainty-aware prediction of 195Pt chemical shifts,” *submitted to: Journal of Chemical Information and Modeling*, 2025.**
+> **A. Meßler and H. Bahmann*, “Uncertainty-aware prediction of 195Pt chemical shifts from limited data” *published in Journal of Chemical Information and Modeling*, 2026.**
 
 The code and default configurations of each ML model as well as the dataset used in our work are included.
 
@@ -78,7 +78,7 @@ pip install -r requirements.txt
 ## Usage
 To directly reproduce the results provided in the publication, execute the cells for each model in the notebook [example_use.ipynb](/src/example_use.ipynb).
 
-### $^{195}$Pt chemical shift prediction via CLI
+### 195Pt chemical shift prediction via CLI
 Inference on new structures with the final model (retrained on the total dataset using one of the three representations) can be carried out by executing the prediction pipeline:
 ```bash
 python -m src.inference.infer_single --input [path to xyz-file] --rep [representation (ChEAP, GAPE or SOAP)]
