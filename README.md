@@ -83,6 +83,7 @@ Inference on new structures with the final model (retrained on the total dataset
 ```bash
 python -m src.inference.infer_single --input [path to xyz-file] --rep [representation (ChEAP, GAPE or SOAP)]
 ```
+The output consists of the chemical shit prediction and the corresponding prediction uncertainties.
 Please make sure that your input for the CLI tool is a xyz-file containing Cartesian atomic coordinates with the example format:
 ```bash
 7 # total number of atoms
