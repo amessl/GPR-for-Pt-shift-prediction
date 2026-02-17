@@ -1,4 +1,4 @@
-# Ignore local scripts
+# Ignore local scripts and shell scripts
 src/SOAP_analysis.ipynb
 src/plots.ipynb
 src/sync_mlruns.sh
