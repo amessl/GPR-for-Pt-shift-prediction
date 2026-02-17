@@ -82,9 +82,16 @@ To directly reproduce the results provided in the publication, execute the cells
 If you use our models in your research, please cite:
 
 ```bibtex
-@article{messler_2026_pt_nmr,
-  title={Uncertainty-aware prediction of $^{195}$Pt chemical shifts},
-  author={Meßler, A. and Bahmann, H.},
-  journal={Journal of Chemical Information and Modeling},
-  year={2026}
+@article{doi:10.1021/acs.jcim.5c02541,
+author = {Meßler, Alexander and Bahmann, Hilke},
+title = {Uncertainty-Aware Prediction of 195Pt Chemical Shifts from Limited Data},
+journal = {Journal of Chemical Information and Modeling},
+volume = {66},
+number = {3},
+pages = {1498-1510},
+year = {2026},
+doi = {10.1021/acs.jcim.5c02541},
+    note ={PMID: 41610407},
+URL = {https://doi.org/10.1021/acs.jcim.5c02541}
+}
 ```
