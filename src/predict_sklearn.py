@@ -196,7 +196,7 @@ class SklearnGPRegressor(BaseConfig):
             if self.partitioned:
                 directory = f'{self.fit_path}{self.descriptor_type}_{"_".join([f'{self.descriptor_params[param]}' for param in self.descriptor_params])}'
                 os.makedirs(directory, exist_ok=True)
-                filename = f'GPR_z{kernel_degree}_{self.descriptor_type}.sav'
+                filename = f'GPR_z{kernel_degree}_{self.descriptor_type}.joblib'
 
                 with open(os.path.join(directory, filename), 'wb') as f:
                     pickle.dump(estimator, f)
@@ -290,7 +290,7 @@ class SklearnGPRegressor(BaseConfig):
 
         if os.path.isdir(folder):
 
-            filename = f'GPR_z{kernel_degree}_opt_a{noise}.sav'
+            filename = f'GPR_z{kernel_degree}_{self.descriptor_type}.joblib'
 
             try:
 

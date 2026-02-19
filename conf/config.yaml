@@ -16,6 +16,6 @@ ap_path: ${data_root}/atomic_props.json
 task: train
 report: full
 zeta: 2
-partitioned: false
+partitioned: true
 
 experiment_name: example

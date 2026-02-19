@@ -14,7 +14,7 @@ representation = st.selectbox("Select Molecular Representation",
                               options=["ChEAP", "GAPE", "SOAP"])
 
 confidence_interval = st.selectbox("Select Confidence Interval",
-                                   options=[f"68 %", "95 %", "99.7 %"])
+                                   options=["68 %", "95 %", "99.7 %"])
 
 file = st.file_uploader("Drag and drop XYZ file", type=["xyz"])
 
