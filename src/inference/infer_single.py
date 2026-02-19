@@ -5,12 +5,53 @@ from src.generate_descriptors import GenDescriptors
 import argparse
 import numpy as np
 
-
-def single_inference():
+def single_inference_app(rep, input, confidence_interval):
 
     with initialize(config_path="../../conf", version_base="1.1"):
         cfg = compose(config_name="config")
 
+    model_path = os.path.join(cfg.backend.model.retrained_models_path,
+                              f'GPR_{rep}.joblib')
+
+    cfg.representations.rep = rep
+    gen = GenDescriptors(config=cfg)
+
+    if rep == 'SOAP':
+        x = gen.generate_SOAP_single(input_xyz=input)
+    elif rep == 'GAPE':
+        x = gen.get_APE_RF_single(input_xyz=input)
+    elif rep == 'ChEAP':
+        x = gen.get_SIF_single(input_xyz=input, target_list=cfg.representations.ChEAP_params)
+    else:
+        raise ValueError(f'Representation {rep} not supported. Choose on of the following:'
+                         f'"SOAP", "GAPE" or "ChEAP".')
+
+    if os.path.exists:
+        model = joblib.load(model_path)
+
+        mean, std = model.predict(x, return_std=True)
+
+    else:
+        raise FileNotFoundError(f'Retrained model: {model_path} does not exist. '
+                                f'Retrain and save model to this path.')
+
+    if confidence_interval == "68 %":
+        pass
+    elif confidence_interval == "95 %":
+        std = 2*std
+    elif confidence_interval == "99.7 %":
+        std = 3*std
+    else:
+        raise ValueError('Selected Confidence Interval not applicable.')
+
+
+    return mean, std
+
+
+def single_inference_cli():
+
+    with initialize(config_path="../../conf", version_base="1.1"):
+        cfg = compose(config_name="config")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, required=True,
@@ -50,4 +91,4 @@ def single_inference():
 
 
 if __name__=='__main__':
-    single_inference()
+    single_inference_cli()

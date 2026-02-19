@@ -5,7 +5,7 @@ defaults:
   - backend: sklearn
   - grid_search: default
 
-data_root: /home/alex/Pt_NMR/data
+data_root: /home/alex/Pt_NMR/data  # adjust to local env
 xyz_base: st_
 xyz_dir:
   - ${data_root}/structures/train_split
