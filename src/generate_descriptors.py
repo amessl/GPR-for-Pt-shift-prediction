@@ -384,8 +384,14 @@ class GenDescriptors(BaseConfig):
 
     def generate_SOAP_single(self, input_xyz, normalize=True):
 
-        species = self.get_total_species()
+        # Fixed list, not read from data to enable containerization
+        species = ['H', 'C', 'N', 'O', 'F', 'Cl', 'Br', 'I',
+                   'S', 'P', 'As', 'Sb', 'Ge', 'Sn', 'Ge',
+                   'Te', 'Si', 'Se', 'Pt']
+
         soap_power_spectrum = None
+
+        print(f'Type:{type(input_xyz)}')
 
         try:
             mol = rdmolfiles.MolFromXYZFile(input_xyz)
