@@ -15,6 +15,8 @@ All molecular structures used in this work can be found in [data/structures/tota
 
 ```text
 .
+├── app
+│   ├── streamlit_app.py
 ├── conf
 │   ├── backend
 │   │   ├── sklearn_benchmark.yaml
@@ -39,7 +41,10 @@ All molecular structures used in this work can be found in [data/structures/tota
 │       ├── test_split
 │       ├── total
 │       └── train_split
+├── .dockerignore
 ├── .gitignore
+├── Dockerfile
+├── LICENSE
 ├── README.md
 ├── requirements.txt
 ├── src
@@ -61,6 +66,15 @@ All molecular structures used in this work can be found in [data/structures/tota
 
 ## Installation
 
+### Docker image
+To use the final models with a UI for inference only, obtain the docker image from the dockerhub repository and run the container locally. Installing python and various dependencies is avoided this way. Install docker on your system and then run the following command:
+```bash
+docker pull amessl/gpr-for-pt-shift-prediction:1.0.1
+```
+
+### Build from source
+To use the final models for inference and access the whole codebase, do the following:
+
 Clone the repository
 
 ```bash
@@ -75,9 +89,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Adjust the data_root in [config.yaml](/conf/config.yaml) to match the path of your local environment.
+
 ## Usage
 To directly reproduce the results provided in the publication, execute the cells for each model in the notebook [example_use.ipynb](/src/example_use.ipynb).
-
 ### 195Pt chemical shift prediction via CLI
 Inference on new structures with the final model (retrained on the total dataset using one of the three representations) can be carried out by executing the prediction pipeline:
 ```bash
@@ -97,6 +112,20 @@ Cl  1.00497122637463     -2.16495216376531      0.67340550015585
 Cl  3.37072863810750      0.10098482130122     -0.00831461532193
 ```
 Currently the models are built to work for mononuclear Pt complexes only.
+
+### 195Pt chemical shift prediction via UI
+The same can be done when using the docker image. After pulling the image from the repository as explained above, run the following commands:
+
+```bash
+docker run -p 8501:8501 amessl/gpr-for-pt-shift-prediction
+```
+
+Access the UI via the local URL:
+
+```bash
+http://localhost:8501
+```
+
 ## Citation
 If you use our models in your research, please cite:
 
